@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1096452437470",
+    "project_id": "crochet-business-app-f3880",
+    "storage_bucket": "crochet-business-app-f3880.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096452437470:android:50a6d9d245a8b56893994f",
+        "android_client_info": {
+          "package_name": "com.example.tamisknits"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1PRIsk3R5RrHJTUHAAOl57L7reLbkBnI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
