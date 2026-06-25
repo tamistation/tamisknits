@@ -1,6 +1,6 @@
 package com.example.tamisknits.models
 
-data class Product(
+data class Products(
     val productId: String = "",
     val name: String = "",
     val description: String = "",

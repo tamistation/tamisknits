@@ -1,7 +1,7 @@
 package com.example.tamisknits.models
 
 
-data class Order(
+data class Orders(
     val orderId: String = "",
     val clientId: String = "",
     val deliveryId: String = "",

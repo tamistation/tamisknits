@@ -1,6 +1,5 @@
 package com.example.tamisknits.models
 
-
 data class User(
     val uid: String = "",
     val name: String = "",

@@ -1,10 +1,10 @@
 package com.example.tamisknits.models
 
-data class SupportTicket(
+data class SupportTickets(
     val ticketId: String = "",
     val clientId: String = "",
+    val adminId: String = "",
     val subject: String = "",
     val message: String = "",
     val status: String = "open",
-    val adminReply: String = ""
 )
