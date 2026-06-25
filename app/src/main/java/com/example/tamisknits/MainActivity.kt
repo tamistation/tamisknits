@@ -16,6 +16,7 @@ import com.example.tamisknits.ui.theme.TamisknitsTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //FirebaseManagerTest.testAll()
         enableEdgeToEdge()
         setContent {
             TamisknitsTheme {

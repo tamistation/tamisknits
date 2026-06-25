@@ -1,4 +1,7 @@
 package com.example.tamisknits.models
 
-class FavoriteItemDto {
-}
+data class FavoriteItem(
+    val favoriteId: String = "",
+    val clientId: String = "",
+    val productId: String = ""
+)
