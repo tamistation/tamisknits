@@ -41,7 +41,7 @@ class FirebaseRepository(
                                 name = document.getString("name") ?: "",
                                 email = document.getString("email") ?: "",
                                 phone = document.getString("phone") ?: "",
-                                role = document.getString("role") ?: "client"
+                                userType = UserType()
                             )
                             trySend(user)
                         } else {
@@ -61,8 +61,8 @@ class FirebaseRepository(
             "name" to user.name,
             "email" to user.email,
             "phone" to user.phone,
-            "role" to user.role,
-            "createdAt" to FieldValue.serverTimestamp()
+            "createdAt" to FieldValue.serverTimestamp(),
+            "usertype" to UserType()
         )
         firestore.collection("users").document(user.uid)
             .set(data)
@@ -82,7 +82,7 @@ class FirebaseRepository(
                             name = doc.getString("name") ?: "",
                             email = doc.getString("email") ?: "",
                             phone = doc.getString("phone") ?: "",
-                            role = doc.getString("role") ?: "client"
+                            userType = UserType()
                         )
                     )
                 } else {
