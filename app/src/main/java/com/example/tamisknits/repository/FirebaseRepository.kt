@@ -1,5 +1,6 @@
 package com.example.tamisknits.repository
 
+import android.util.Log
 import com.example.tamisknits.models.Cart
 import com.example.tamisknits.models.CustomizationRequest
 import com.example.tamisknits.models.Favorites
@@ -29,7 +30,7 @@ class FirebaseRepository(
             if (firebaseUser == null) {
                 trySend(null)
             } else {
-                firestore.collection("users")
+                firestore.collection("User")
                     .document(firebaseUser.uid)
                     .addSnapshotListener { document, error ->
                         if (error != null) {
@@ -41,7 +42,13 @@ class FirebaseRepository(
                                 name = document.getString("name") ?: "",
                                 email = document.getString("email") ?: "",
                                 phone = document.getString("phone") ?: "",
-                                userType = UserType()
+                                userType = UserType(
+                                    usertypeiid = "",
+                                    uid = document.id,
+                                    type = document.getString("type") ?: "",
+                                    permissions = (document.get("permissions") as? List<String>)
+                                        ?: emptyList()
+                                )
                             )
                             trySend(user)
                         } else {
@@ -62,9 +69,10 @@ class FirebaseRepository(
             "email" to user.email,
             "phone" to user.phone,
             "createdAt" to FieldValue.serverTimestamp(),
-            "usertype" to UserType()
+            "type" to user.userType.type,
+            "permissions" to user.userType.permissions
         )
-        firestore.collection("users").document(user.uid)
+        firestore.collection("User").document(user.uid)
             .set(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add user") }
@@ -72,7 +80,7 @@ class FirebaseRepository(
 
     // get single user
     fun getUser(uid: String, onSuccess: (User) -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("users").document(uid)
+        firestore.collection("User").document(uid)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
@@ -82,7 +90,13 @@ class FirebaseRepository(
                             name = doc.getString("name") ?: "",
                             email = doc.getString("email") ?: "",
                             phone = doc.getString("phone") ?: "",
-                            userType = UserType()
+                            userType = UserType(
+                                usertypeiid = "",
+                                uid = doc.id,
+                                type = doc.getString("type") ?: "",
+                                permissions = (doc.get("permissions") as? List<String>)
+                                    ?: emptyList()
+                        )
                         )
                     )
                 } else {
@@ -99,7 +113,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("users").document(uid)
+        firestore.collection("User").document(uid)
             .update(updates)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update user") }
@@ -107,7 +121,7 @@ class FirebaseRepository(
 
     // delete user
     fun deleteUser(uid: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("users").document(uid)
+        firestore.collection("User").document(uid)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete user") }
@@ -123,7 +137,7 @@ class FirebaseRepository(
             "type" to userType.type,
             "permissions" to userType.permissions
         )
-        firestore.collection("user_types").document(userType.uid)
+        firestore.collection("UserType").document(userType.uid)
             .set(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add user type") }
@@ -131,7 +145,7 @@ class FirebaseRepository(
 
     // get user type
     fun getUserType(uid: String, onSuccess: (UserType) -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("user_types").document(uid)
+        firestore.collection("UserType").document(uid)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
@@ -158,7 +172,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("user_types").document(uid)
+        firestore.collection("UserType").document(uid)
             .update(mapOf("type" to newType, "permissions" to newPermissions))
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update user type") }
@@ -166,7 +180,7 @@ class FirebaseRepository(
 
     // delete user type
     fun deleteUserType(uid: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("user_types").document(uid)
+        firestore.collection("UserType").document(uid)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete user type") }
@@ -186,14 +200,14 @@ class FirebaseRepository(
             "isCustomizable" to product.isCustomizable,
             "createdAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("products").add(data)
+        firestore.collection("Products").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add product") }
     }
 
     // get all products
     fun getProducts(): Flow<List<Products>> = callbackFlow {
-        val listener = firestore.collection("products")
+        val listener = firestore.collection("Products")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList()); return@addSnapshotListener
@@ -217,7 +231,7 @@ class FirebaseRepository(
 
     // get single product
     fun getProduct(productId: String, onSuccess: (Products) -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("products").document(productId)
+        firestore.collection("Products").document(productId)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
@@ -247,7 +261,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("products").document(productId)
+        firestore.collection("Products").document(productId)
             .update(updates)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update product") }
@@ -255,7 +269,7 @@ class FirebaseRepository(
 
     // delete product
     fun deleteProduct(productId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("products").document(productId)
+        firestore.collection("Products").document(productId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete product") }
@@ -275,14 +289,14 @@ class FirebaseRepository(
             "createdAt" to FieldValue.serverTimestamp(),
             "updatedAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("orders").add(data)
+        firestore.collection("Orders").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add order") }
     }
 
     // get orders
     fun getOrders(): Flow<List<Orders>> = callbackFlow {
-        val listener = firestore.collection("orders")
+        val listener = firestore.collection("Orders")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList()); return@addSnapshotListener
@@ -311,7 +325,7 @@ class FirebaseRepository(
         onSuccess: (List<Orders>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("orders")
+        firestore.collection("Orders")
             .whereEqualTo("clientId", clientId)
             .get()
             .addOnSuccessListener { snapshot ->
@@ -340,7 +354,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("orders").document(orderId)
+        firestore.collection("Orders").document(orderId)
             .update(mapOf("status" to newStatus, "updatedAt" to FieldValue.serverTimestamp()))
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update order") }
@@ -348,7 +362,7 @@ class FirebaseRepository(
 
     // delete order
     fun deleteOrder(orderId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("orders").document(orderId)
+        firestore.collection("Orders").document(orderId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete order") }
@@ -365,14 +379,14 @@ class FirebaseRepository(
             "totalPrice" to cart.totalPrice,
             "addedAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("cart").add(data)
+        firestore.collection("Cart").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add to cart") }
     }
 
     // get cart by client
     fun getCart(clientId: String): Flow<List<Cart>> = callbackFlow {
-        val listener = firestore.collection("cart")
+        val listener = firestore.collection("Cart")
             .whereEqualTo("clientId", clientId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -400,7 +414,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("cart").document(cartId)
+        firestore.collection("Cart").document(cartId)
             .update(mapOf("quantity" to quantity, "totalPrice" to totalPrice))
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update cart") }
@@ -408,7 +422,7 @@ class FirebaseRepository(
 
     // delete from cart
     fun removeFromCart(cartId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("cart").document(cartId)
+        firestore.collection("Cart").document(cartId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to remove from cart") }
@@ -423,14 +437,14 @@ class FirebaseRepository(
             "productId" to favorite.productId,
             "addedAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("favorites").add(data)
+        firestore.collection("Favorites").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add to favorites") }
     }
 
     // get favorites by client
     fun getFavorites(clientId: String): Flow<List<Favorites>> = callbackFlow {
-        val listener = firestore.collection("favorites")
+        val listener = firestore.collection("Favorites")
             .whereEqualTo("clientId", clientId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -454,7 +468,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("favorites").document(favoriteId)
+        firestore.collection("Favorites").document(favoriteId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to remove from favorites") }
@@ -476,14 +490,14 @@ class FirebaseRepository(
             "status" to ticket.status,
             "createdAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("support_tickets").add(data)
+        firestore.collection("SupportTickets").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add ticket") }
     }
 
     // get all tickets
     fun getSupportTickets(): Flow<List<SupportTickets>> = callbackFlow {
-        val listener = firestore.collection("support_tickets")
+        val listener = firestore.collection("SupportTickets")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList()); return@addSnapshotListener
@@ -510,7 +524,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("support_tickets").document(ticketId)
+        firestore.collection("SupportTickets").document(ticketId)
             .update("status", status)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update ticket") }
@@ -518,7 +532,7 @@ class FirebaseRepository(
 
     // delete ticket
     fun deleteSupportTicket(ticketId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        firestore.collection("support_tickets").document(ticketId)
+        firestore.collection("SupportTickets").document(ticketId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete ticket") }
@@ -541,14 +555,14 @@ class FirebaseRepository(
             "status" to request.status,
             "createdAt" to FieldValue.serverTimestamp()
         )
-        firestore.collection("customization_requests").add(data)
+        firestore.collection("CustomizationRequests").add(data)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add request") }
     }
 
     //get all requests
     fun getCustomizationRequests(): Flow<List<CustomizationRequest>> = callbackFlow {
-        val listener = firestore.collection("customization_requests")
+        val listener = firestore.collection("CustomizationRequests")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList()); return@addSnapshotListener
@@ -577,7 +591,7 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("customization_requests").document(requestId)
+        firestore.collection("CustomizationRequests").document(requestId)
             .update("status", newStatus)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to update request") }
@@ -589,9 +603,44 @@ class FirebaseRepository(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        firestore.collection("customization_requests").document(requestId)
+        firestore.collection("CustomizationRequests").document(requestId)
             .delete()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete request") }
+    }
+
+
+    fun testUserFunction() {
+        val testUser = User(
+            uid = "test456",
+            name = "Sara Test",
+            email = "sara@test.com",
+            phone = "03111111",
+            userType = UserType(
+                usertypeiid = "type1",
+                uid = "test456",
+                type = "client",
+                permissions = listOf("view_products", "place_orders")
+            )
+        )
+
+        addUser(
+            testUser,
+            onSuccess = {
+                Log.d("TEST", "User added!")
+
+                getUser(
+                    "test123",
+                    onSuccess = { fetchedUser ->
+                        Log.d("TEST", "Fetched: $fetchedUser")
+                        Log.d("TEST", "Name: ${fetchedUser.name}")
+                        Log.d("TEST", "Type: ${fetchedUser.userType.type}")
+                        Log.d("TEST", "Permissions: ${fetchedUser.userType.permissions}")
+                    },
+                    onFailure = { Log.e("TEST", "Get failed: $it") }
+                )
+            },
+            onFailure = { Log.e("TEST", "Add failed: $it") }
+        )
     }
 }

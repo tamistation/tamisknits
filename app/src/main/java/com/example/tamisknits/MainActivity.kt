@@ -11,12 +11,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.tamisknits.repository.FirebaseRepository
 import com.example.tamisknits.ui.theme.TamisknitsTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
+    private lateinit var repository: FirebaseRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //FirebaseManagerTest.testAll()
+
+        repository = FirebaseRepository(
+            FirebaseAuth.getInstance(),
+            FirebaseFirestore.getInstance()
+        )
+
+        repository.testUserFunction()
+
+
+
         enableEdgeToEdge()
         setContent {
             TamisknitsTheme {
