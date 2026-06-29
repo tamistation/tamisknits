@@ -27,7 +27,12 @@ class MainActivity : ComponentActivity() {
         )
 
         repository.testUserFunction()
-
+        repository.testProductFunctions()
+        repository.testOrderFunctions()
+        repository.testCartFunctions()
+        repository.testFavoritesFunctions()
+        repository.testSupportTicketFunctions()
+        repository.testCustomizationFunctions()
 
 
         enableEdgeToEdge()

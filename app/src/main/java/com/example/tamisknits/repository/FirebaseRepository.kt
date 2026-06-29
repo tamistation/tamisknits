@@ -96,7 +96,7 @@ class FirebaseRepository(
                                 type = doc.getString("type") ?: "",
                                 permissions = (doc.get("permissions") as? List<String>)
                                     ?: emptyList()
-                        )
+                            )
                         )
                     )
                 } else {
@@ -106,7 +106,7 @@ class FirebaseRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to get user") }
     }
 
-    // edit  user
+    // edit user
     fun updateUser(
         uid: String,
         updates: Map<String, Any>,
@@ -276,7 +276,8 @@ class FirebaseRepository(
     }
 
     //orders
-    // ADD order
+
+    // add order
     fun addOrder(order: Orders, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         val data = hashMapOf(
             "clientId" to order.clientId,
@@ -539,6 +540,7 @@ class FirebaseRepository(
     }
 
     //customization request
+
     // add request
     fun addCustomizationRequest(
         request: CustomizationRequest,
@@ -560,7 +562,7 @@ class FirebaseRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to add request") }
     }
 
-    //get all requests
+    // get all requests
     fun getCustomizationRequests(): Flow<List<CustomizationRequest>> = callbackFlow {
         val listener = firestore.collection("CustomizationRequests")
             .addSnapshotListener { snapshot, error ->
@@ -609,18 +611,26 @@ class FirebaseRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete request") }
     }
 
+    //testing part
 
     fun testUserFunction() {
         val testUser = User(
-            uid = "test456",
-            name = "Sara Test",
-            email = "sara@test.com",
-            phone = "03111111",
+            uid = "test12",
+            name = "admin Test",
+            email = "admin@test.com",
+            phone = "03222222",
             userType = UserType(
-                usertypeiid = "type1",
-                uid = "test456",
-                type = "client",
-                permissions = listOf("view_products", "place_orders")
+                usertypeiid = "type2",
+                uid = "test12",
+                type = "admin",
+                permissions = listOf(
+                    "add/edit/delete users",
+                    "add/edit/delete products",
+                    "view/respond/close support tickets",
+                    "view/approve/reject customization requests",
+                    "assign delivery",
+                    "view/update/delete order"
+                )
             )
         )
 
@@ -628,9 +638,8 @@ class FirebaseRepository(
             testUser,
             onSuccess = {
                 Log.d("TEST", "User added!")
-
                 getUser(
-                    "test123",
+                    "test12",
                     onSuccess = { fetchedUser ->
                         Log.d("TEST", "Fetched: $fetchedUser")
                         Log.d("TEST", "Name: ${fetchedUser.name}")
@@ -641,6 +650,152 @@ class FirebaseRepository(
                 )
             },
             onFailure = { Log.e("TEST", "Add failed: $it") }
+        )
+    }
+
+    fun testProductFunctions() {
+        val testProduct = Products(
+            productId = "",
+            name = "Crochet Bag",
+            description = "Handmade tshirt yarn",
+            price = 25.0,
+            category = "bags",
+            imageUrl = "https://test.com/image.jpg",
+            stock = 10,
+            isCustomizable = true
+        )
+
+        addProduct(
+            testProduct,
+            onSuccess = {
+                Log.d("TEST", "Product added!")
+                getProduct(
+                    "",
+                    onSuccess = { p -> Log.d("TEST", "Product fetched: ${p.name}") },
+                    onFailure = { Log.e("TEST", "Get product failed: $it") }
+                )
+            },
+            onFailure = { Log.e("TEST", "Add product failed: $it") }
+        )
+    }
+
+    fun testOrderFunctions() {
+        val testOrder = Orders(
+            orderId = "",
+            clientId = "test456",
+            deliveryId = "delivery1",
+            items = listOf(mapOf("productId" to "prod1", "quantity" to 2)),
+            totalPrice = 50.0,
+            status = "pending",
+            shippingAddress = mapOf("city" to "Beirut", "street" to "Main St"),
+            isCustomOrder = false
+        )
+
+        addOrder(
+            testOrder,
+            onSuccess = {
+                Log.d("TEST", "Order added!")
+                getOrdersByClient(
+                    "test456",
+                    onSuccess = { orders ->
+                        Log.d("TEST", "Orders count: ${orders.size}")
+                        orders.forEach {
+                            Log.d(
+                                "TEST",
+                                "Order: ${it.orderId} status: ${it.status}"
+                            )
+                        }
+                    },
+                    onFailure = { Log.e("TEST", "Get orders failed: $it") }
+                )
+            },
+            onFailure = { Log.e("TEST", "Add order failed: $it") }
+        )
+    }
+
+    fun testCartFunctions() {
+        val testCart = Cart(
+            cartId = "",
+            clientId = "test456",
+            productId = "prod1",
+            quantity = 2,
+            totalPrice = 50.0
+        )
+
+        addToCart(
+            testCart,
+            onSuccess = {
+                Log.d("TEST", "Cart item added!")
+                Log.d("TEST", "Check Firestore Cart collection for test456")
+            },
+            onFailure = { Log.e("TEST", "Add to cart failed: $it") }
+        )
+    }
+
+    fun testFavoritesFunctions() {
+        val testFavorite = Favorites(
+            favoriteId = "",
+            clientId = "test456",
+            productId = "prod1"
+        )
+
+        addToFavorites(
+            testFavorite,
+            onSuccess = {
+                Log.d("TEST", "Favorite added!")
+                Log.d("TEST", "Check Firestore Favorites collection for test456")
+            },
+            onFailure = { Log.e("TEST", "Add favorite failed: $it") }
+        )
+    }
+
+    fun testSupportTicketFunctions() {
+        val testTicket = SupportTickets(
+            ticketId = "",
+            clientId = "test456",
+            adminId = "admin1",
+            subject = "Where is my order?",
+            message = "I placed an order 3 days ago and haven't heard back",
+            status = "open"
+        )
+
+        addSupportTicket(
+            testTicket,
+            onSuccess = {
+                Log.d("TEST", "Ticket added!")
+                updateTicketStatus(
+                    "", "resolved",
+                    onSuccess = { Log.d("TEST", "Ticket status updated!") },
+                    onFailure = { Log.e("TEST", "Update ticket failed: $it") }
+                )
+            },
+            onFailure = { Log.e("TEST", "Add ticket failed: $it") }
+        )
+    }
+
+    fun testCustomizationFunctions() {
+        val testRequest = CustomizationRequest(
+            requestId = "",
+            clientId = "test456",
+            adminId = "admin1",
+            productId = "prod1",
+            details = "I want a blue bag with long handles",
+            colorPreference = "blue",
+            sizePreference = "large",
+            status = "pending"
+        )
+
+        addCustomizationRequest(
+            testRequest,
+            onSuccess = {
+                Log.d("TEST", "Customization request added!")
+                updateCustomizationStatus(
+                    "", "approved",
+                    onSuccess = { Log.d("TEST", "Request status updated!") },
+                    onFailure = { Log.e("TEST", "Update request failed: $it") }
+                )
+            },
+            onFailure = { Log.e("TEST", "Add request failed: $it") }
         )
     }
 }
