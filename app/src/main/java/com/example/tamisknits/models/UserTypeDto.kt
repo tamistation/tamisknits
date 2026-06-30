@@ -2,8 +2,7 @@ package com.example.tamisknits.models
 
 
 data class UserType(
-    val usertypeiid: String = "",
-    val uid: String = "",
+    val usertypeId: String = "",
     val type: String = "",
-    val permissions: List<String> = emptyList()
+    val permissionIds: List<String> = emptyList()
 )
