@@ -546,6 +546,7 @@ class FirebaseRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to update order") }
     }
 
+
     // delete order
     fun deleteOrder(orderId: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         firestore.collection("Orders").document(orderId)
@@ -553,6 +554,22 @@ class FirebaseRepository(
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete order") }
     }
+
+
+    fun updateOrder(
+        orderId: String,
+        updates: Map<String, Any>,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection("Orders").document(orderId)
+            .update(updates)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onFailure(e.message ?: "Failed to update order") }
+    }
+
+
+
 
 
 
