@@ -2,61 +2,70 @@ package com.example.tamisknits.features.admin.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tamisknits.models.OrderStatusConfig
 import com.example.tamisknits.models.Orders
-import com.example.tamisknits.repository.FirebaseRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
+//state in a separate file
+//get statuses from api not viewmodel
+//usecase
 enum class OrderTab { PENDING, ACTIVE, PREVIOUS }
 
-data class OrderManagementUiState(
-    val isLoading: Boolean = true,
-    val allOrders: List<Orders> = emptyList(),
-    val selectedTab: OrderTab = OrderTab.PENDING,
-    val searchQuery: String = "",
-    val selectedFilter: String = "All",
-    val cancelDialogOrderId: String? = null,
-    val cancelReason: String = "",
-    val draggingOrderId: String? = null
-)
+enum class OrderFilter { ALL, CUSTOM, STANDARD }
 
-private val PENDING_STATUSES = listOf("pending")
-private val ACTIVE_STATUSES = listOf("confirmed", "shipped", "in_transit")
-private val PREVIOUS_STATUSES = listOf("delivered", "cancelled")
-
-val STATUS_FLOW = listOf("pending", "confirmed", "shipped", "in_transit", "delivered")
-
-class OrderManagementViewModel(
-    private val repository: FirebaseRepository
+@HiltViewModel
+class OrderManagementViewModel @Inject constructor(
+    private val useCase: OrderManagementUseCase
 ) : ViewModel() {
 
+    //this is private only read and write inside the class
     private val _uiState = MutableStateFlow(OrderManagementUiState())
     val uiState: StateFlow<OrderManagementUiState> = _uiState
 
+    //this is public allowed to be read from outside class but stateflow doesnt allow write
+    private val statusConfigFlow = useCase.getOrderStatusConfig()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), OrderStatusConfig())
 
-    private val ordersFlow = repository.getOrders()
+    //used later in advanced order status
+    val statusConfig: StateFlow<OrderStatusConfig> = statusConfigFlow //public
+    private val ordersFlow = useCase.getOrders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+//state in converts flow to stateflow,a streaam always having a cached value
+    //with 3 arguments (when to run,whent to start stop listening 9here 5s),initial value)
 
+
+    //combine is listening to multiple flows:
+    // and whenever any of these flows change filtered orders runs again
+    //
     val filteredOrders: StateFlow<List<Orders>> = combine(
         _uiState,
-        ordersFlow
-    ) { state, orders ->
+        ordersFlow,
+        statusConfigFlow
+    ) { state, orders, config ->
+
+        //tab is filtered according to the grouping of selected configg
         val tabFiltered = when (state.selectedTab) {
-            OrderTab.PENDING -> orders.filter { it.status in PENDING_STATUSES }
-            OrderTab.ACTIVE -> orders.filter { it.status in ACTIVE_STATUSES }
-            OrderTab.PREVIOUS -> orders.filter { it.status in PREVIOUS_STATUSES }
+            OrderTab.PENDING -> orders.filter { it.status in config.pending }
+            OrderTab.ACTIVE -> orders.filter { it.status in config.active }
+            OrderTab.PREVIOUS -> orders.filter { it.status in config.previous }
         }
+        //also the type is according to  iscustomorder if yes or no
         val typeFiltered = when (state.selectedFilter) {
-            "Custom" -> tabFiltered.filter { it.isCustomOrder }
-            "Standard" -> tabFiltered.filter { !it.isCustomOrder }
-            else -> tabFiltered
+            OrderFilter.CUSTOM -> tabFiltered.filter { it.isCustomOrder }
+            OrderFilter.STANDARD -> tabFiltered.filter { !it.isCustomOrder }
+            OrderFilter.ALL -> tabFiltered
         }
-        if (state.searchQuery.isBlank()) typeFiltered
+
+        if (state.searchQuery.isBlank()) typeFiltered //if its blank it will
+        //work like typefiltered
+        //if not :
         else typeFiltered.filter {
             it.orderId.take(8).contains(state.searchQuery, ignoreCase = true) ||
                     it.orderId.contains(state.searchQuery, ignoreCase = true) ||
@@ -65,46 +74,54 @@ class OrderManagementViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    //executed after vm runs, collects new orders, keeps ui state updated(isloading to stop it from loading)
+
     init {
         viewModelScope.launch {
             ordersFlow.collect { orders ->
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    allOrders = orders
+                    isLoading = false
                 )
             }
         }
     }
 
+    //get state of each
     fun onTabSelected(tab: OrderTab) {
         _uiState.value = _uiState.value.copy(selectedTab = tab, searchQuery = "")
     }
+    //_uistate is property of mutable statflow so it can be reassigned inside thisc lass
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
     }
 
-    fun onFilterSelected(filter: String) {
+    fun onFilterSelected(filter: OrderFilter) {
         _uiState.value = _uiState.value.copy(selectedFilter = filter)
     }
 
     fun advanceOrderStatus(orderId: String, currentStatus: String) {
-        val currentIndex = STATUS_FLOW.indexOf(currentStatus)
-        if (currentIndex == -1 || currentIndex >= STATUS_FLOW.lastIndex) return
-        val nextStatus = STATUS_FLOW[currentIndex + 1]
-        repository.updateOrderStatus(
+        val flow = statusConfigFlow.value.flow
+        val currentIndex = flow.indexOf(currentStatus) //gets indec of current status
+        if (currentIndex == -1 || currentIndex >= flow.lastIndex) return //checks if its included
+        //or checks if its already in last step so there is nothing to advance to
+        val nextStatus = flow[currentIndex + 1] //neither is true so we advance +1 status
+
+        useCase.updateOrderStatus(
             orderId = orderId,
-            newStatus = nextStatus,
+            newStatus = nextStatus,//new one
             onSuccess = {},
             onFailure = {}
         )
     }
 
     fun goBackOrderStatus(orderId: String, currentStatus: String) {
-        val currentIndex = STATUS_FLOW.indexOf(currentStatus)
+        val flow = statusConfigFlow.value.flow
+        val currentIndex = flow.indexOf(currentStatus)
         if (currentIndex <= 0) return
-        val prevStatus = STATUS_FLOW[currentIndex - 1]
-        repository.updateOrderStatus(
+        //as long as current index isnt the first one we could go backk
+        val prevStatus = flow[currentIndex - 1] //decrease to go back
+        useCase.updateOrderStatus(
             orderId = orderId,
             newStatus = prevStatus,
             onSuccess = {},
@@ -123,13 +140,15 @@ class OrderManagementViewModel(
     fun confirmCancellation() {
         val state = _uiState.value
         val orderId = state.cancelDialogOrderId ?: return
-        repository.updateOrderStatus(
+
+        useCase.updateOrderStatus(
             orderId = orderId,
             newStatus = "cancelled",
             onSuccess = { dismissCancelDialog() },
             onFailure = { dismissCancelDialog() }
         )
-        repository.updateOrder(
+
+        useCase.updateOrder(
             orderId = orderId,
             updates = mapOf("cancellationReason" to state.cancelReason),
             onSuccess = {},
@@ -137,10 +156,11 @@ class OrderManagementViewModel(
         )
     }
 
-    fun dismissCancelDialog() {
+    fun dismissCancelDialog() { //clearing out dialogue
         _uiState.value = _uiState.value.copy(cancelDialogOrderId = null, cancelReason = "")
     }
 
+    //for visuals
     fun onDragStart(orderId: String) {
         _uiState.value = _uiState.value.copy(draggingOrderId = orderId)
     }
@@ -149,4 +169,5 @@ class OrderManagementViewModel(
         _uiState.value = _uiState.value.copy(draggingOrderId = null)
     }
 }
+
 

@@ -24,10 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,13 +35,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -59,62 +54,107 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tamisknits.dialogs.ConfirmationDialog
 import com.example.tamisknits.models.Orders
+import com.example.tamisknits.theme.AppColors
 
-
-private val Cream = Color(0xFFFDFBF9)
-private val Terracotta = Color(0xFF6B1E3C)
-private val TextDark = Color(0xFF1A0A10)
-private val TextMuted = Color(0xFF9C8490)
-private val Pending = Color(0xFFB5892A)
-private val Active = Color(0xFF3D6B8C)
-private val Delivered = Color(0xFF3A7D5C)
-private val Cancelled = Color(0xFF8C1C1C)
+//removed colors and put them in a separate file
+//turned screen to page
+//divided it to page and ui
+//page has the viewmodel
+//variables are in ui,then sent to page
+//changed scaffold to box
+//some functions khlyton ai like the drag and drop
+//tested the dragn drop
+//dialog in a separate file
 
 @Composable
-fun OrderManagementScreen(viewModel: OrderManagementViewModel) {
+fun OrderManagementPage(viewModel: OrderManagementViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val orders by viewModel.filteredOrders.collectAsState()
+    val statusConfig by viewModel.statusConfig.collectAsState()
 
-    Scaffold(
-        containerColor = Cream
-    ) { innerPadding ->
+//calling ui function to give it l data mnl viewmodel
+    OrderManagementUI(
+        uiState = uiState,
+        orders = orders,
+        pendingCount = orders.count { it.status == "pending" },
+        statusFlow = statusConfig.flow,
+        onSearchQueryChange = viewModel::onSearchQueryChange,
+        onFilterSelected = viewModel::onFilterSelected,
+        onTabSelected = viewModel::onTabSelected,
+        onDragStart = viewModel::onDragStart,
+        onDragEnd = viewModel::onDragEnd,
+        onAdvance = { orderId, status -> viewModel.advanceOrderStatus(orderId, status) },
+        onGoBack = { orderId, status -> viewModel.goBackOrderStatus(orderId, status) },
+        onCancelClick = viewModel::onCancelClick,
+        onCancelReasonChange = viewModel::onCancelReasonChange,
+        onConfirmCancellation = viewModel::confirmCancellation,
+        onDismissCancelDialog = viewModel::dismissCancelDialog
+    )
+
+}
+
+@Composable
+private fun OrderManagementUI(// hol declarations to fill in data fo2 with types
+    uiState: OrderManagementUiState,
+    orders: List<Orders>,
+    pendingCount: Int,
+    statusFlow: List<String>,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterSelected: (OrderFilter) -> Unit,
+    onTabSelected: (OrderTab) -> Unit,
+    onDragStart: (String) -> Unit,
+    onDragEnd: () -> Unit,
+    onAdvance: (String, String) -> Unit,
+    onGoBack: (String, String) -> Unit,
+    onCancelClick: (String) -> Unit,
+    onCancelReasonChange: (String) -> Unit,
+    onConfirmCancellation: () -> Unit,
+    onDismissCancelDialog: () -> Unit
+) {
+
+
+    Box(
+        modifier = Modifier
+            .background(AppColors.Cream)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(top = 24.dp)
+
         ) {
 
             OrderManagementHeader()
 
             SearchBar(
                 query = uiState.searchQuery,
-                onQueryChange = viewModel::onSearchQueryChange
+                onQueryChange = onSearchQueryChange
             )
 
 
             FilterChipRow(
                 selected = uiState.selectedFilter,
-                onSelect = viewModel::onFilterSelected
+                onSelect = onFilterSelected
             )
 
 
             OrderTabs(
                 selectedTab = uiState.selectedTab,
-                onTabSelected = viewModel::onTabSelected,
-                pendingCount = viewModel.filteredOrders.collectAsState().value
-                    .count { it.status == "pending" }
+                onTabSelected = onTabSelected,
+                pendingCount = pendingCount
             )
 
-            HorizontalDivider(color = Color(0xFFE5DDD5))
+            HorizontalDivider(color = AppColors.DividerLight)
+
 
 
             if (uiState.isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Terracotta)
+                    CircularProgressIndicator(color = AppColors.Terracotta)
                 }
             } else if (orders.isEmpty()) {
                 EmptyState(tab = uiState.selectedTab)
@@ -125,21 +165,21 @@ fun OrderManagementScreen(viewModel: OrderManagementViewModel) {
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                    }
                     items(orders, key = { it.orderId }) { order ->
                         OrderCard(
                             order = order,
                             isDragging = uiState.draggingOrderId == order.orderId,
-                            onDragStart = { viewModel.onDragStart(order.orderId) },
-                            onDragEnd = { viewModel.onDragEnd() },
+                            statusFlow = statusFlow,
+                            onDragStart = { onDragStart(order.orderId) },
+                            onDragEnd = { onDragEnd() },
                             onAdvance = {
-                                viewModel.advanceOrderStatus(
-                                    order.orderId,
-                                    order.status
-                                )
+                                onAdvance(order.orderId, order.status)
                             },
-                            onGoBack = { viewModel.goBackOrderStatus(order.orderId, order.status) },
-                            onCancelClick = { viewModel.onCancelClick(order.orderId) }
+                            onGoBack = { onGoBack(order.orderId, order.status) },
+                            onCancelClick = { onCancelClick(order.orderId) }
                         )
                     }
                     item { Spacer(Modifier.height(16.dp)) }
@@ -151,14 +191,14 @@ fun OrderManagementScreen(viewModel: OrderManagementViewModel) {
         if (uiState.cancelDialogOrderId != null) {
             CancelOrderDialog(
                 uiState = uiState,
-                onReasonChange = viewModel::onCancelReasonChange,
-                onConfirm = viewModel::confirmCancellation,
-                onDismiss = viewModel::dismissCancelDialog
+                onReasonChange = onCancelReasonChange,
+                onConfirm = onConfirmCancellation,
+                onDismiss = onDismissCancelDialog
             )
         }
     }
-}
 
+}
 
 @Composable
 private fun OrderManagementHeader() {
@@ -173,12 +213,12 @@ private fun OrderManagementHeader() {
                 text = "Orders",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextDark
+                color = AppColors.TextDark
             )
             Text(
                 text = "Manage & track all orders",
                 fontSize = 13.sp,
-                color = TextMuted
+                color = AppColors.TextMuted
             )
         }
     }
@@ -193,29 +233,38 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
+
+
         placeholder = {
             Text(
                 "Search by order ID or client…",
-                color = TextMuted,
+                color = AppColors.TextMuted,
                 fontSize = 14.sp
             )
         },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
+
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = AppColors.TextMuted
+            )
+        },
         singleLine = true,
         shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Terracotta,
-            unfocusedBorderColor = Color(0xFFE0D8D0),
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White
+            focusedBorderColor = AppColors.Terracotta,
+            unfocusedBorderColor = AppColors.Outline,
+            focusedContainerColor = AppColors.Surface,
+            unfocusedContainerColor = AppColors.Surface
         )
     )
 }
 
 
 @Composable
-private fun FilterChipRow(selected: String, onSelect: (String) -> Unit) {
-    val filters = listOf("All", "Custom", "Standard")
+private fun FilterChipRow(selected: OrderFilter, onSelect: (OrderFilter) -> Unit) {
+    val filters = listOf(OrderFilter.ALL, OrderFilter.CUSTOM, OrderFilter.STANDARD)
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -226,27 +275,31 @@ private fun FilterChipRow(selected: String, onSelect: (String) -> Unit) {
             FilterChip(
                 selected = selected == filter,
                 onClick = { onSelect(filter) },
-                label = { Text(filter, fontSize = 13.sp) },
+                label = { Text(filter.label(), fontSize = 13.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Terracotta,
+                    selectedContainerColor = AppColors.Terracotta,
                     selectedLabelColor = Color.White,
                     containerColor = Color.White,
-                    labelColor = TextDark
+                    labelColor = AppColors.TextDark
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = selected == filter,
-                    borderColor = Color(0xFFE0D8D0),
-                    selectedBorderColor = Terracotta
+                    borderColor = AppColors.Outline,
+                    selectedBorderColor = AppColors.Terracotta
                 )
             )
         }
     }
 }
 
-
+fun OrderFilter.label(): String = when (this) {
+    OrderFilter.ALL -> "All"
+    OrderFilter.CUSTOM -> "Custom"
+    OrderFilter.STANDARD -> "Standard"
+}
 @Composable
-private fun OrderTabs(
+private fun OrderTabs( //Ai
     selectedTab: OrderTab,
     onTabSelected: (OrderTab) -> Unit,
     pendingCount: Int
@@ -256,12 +309,12 @@ private fun OrderTabs(
 
     TabRow(
         selectedTabIndex = tabs.indexOf(selectedTab),
-        containerColor = Cream,
-        contentColor = Terracotta,
+        containerColor = AppColors.Cream,
+        contentColor = AppColors.Terracotta,
         indicator = { tabPositions ->
             TabRowDefaults.SecondaryIndicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[tabs.indexOf(selectedTab)]),
-                color = Terracotta
+                color = AppColors.Terracotta
             )
         }
     ) {
@@ -274,13 +327,13 @@ private fun OrderTabs(
                         Text(
                             text = labels[index],
                             fontWeight = if (selectedTab == tab) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (selectedTab == tab) Terracotta else TextMuted,
+                            color = if (selectedTab == tab) AppColors.Terracotta else AppColors.TextMuted,
                             fontSize = 14.sp
                         )
 
                         if (tab == OrderTab.PENDING && pendingCount > 0) {
                             Spacer(Modifier.width(4.dp))
-                            Badge(containerColor = Terracotta) {
+                            Badge(containerColor = AppColors.Terracotta) {
                                 Text("$pendingCount", color = Color.White, fontSize = 10.sp)
                             }
                         }
@@ -296,6 +349,7 @@ private fun OrderTabs(
 private fun OrderCard(
     order: Orders,
     isDragging: Boolean,
+    statusFlow: List<String>,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
     onAdvance: () -> Unit,
@@ -304,6 +358,7 @@ private fun OrderCard(
 ) {
 
     var dragOffsetX by remember { mutableFloatStateOf(0f) }
+
     val scale by animateFloatAsState(if (isDragging) 1.03f else 1f, label = "scale")
 
     val cardElevation by animateFloatAsState(if (isDragging) 8f else 2f, label = "elevation")
@@ -330,19 +385,19 @@ private fun OrderCard(
                         text = "Order #${order.orderId.take(8).uppercase()}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = TextDark
+                        color = AppColors.TextDark
                     )
                     Text(
                         text = if (order.isCustomOrder) "✦ Custom order" else "Standard order",
                         fontSize = 12.sp,
-                        color = if (order.isCustomOrder) Terracotta else TextMuted
+                        color = if (order.isCustomOrder) AppColors.Terracotta else AppColors.TextMuted
                     )
                 }
                 StatusBadge(status = order.status)
             }
 
             Spacer(Modifier.height(10.dp))
-            HorizontalDivider(color = Color(0xFFF0EBE5))
+            HorizontalDivider(color = AppColors.DividerLightTwo)
             Spacer(Modifier.height(10.dp))
 
 
@@ -359,7 +414,7 @@ private fun OrderCard(
             Spacer(Modifier.height(12.dp))
 
 
-            StatusProgressBar(currentStatus = order.status)
+            StatusProgressBar(currentStatus = order.status, statusFlow = statusFlow)
 
             Spacer(Modifier.height(12.dp))
 
@@ -369,13 +424,14 @@ private fun OrderCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
+//Ai
                 if (order.status != "cancelled") {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF5F0EB))
+                            .background(AppColors.DragBackground)
+
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                             .pointerInput(order.orderId) {
                                 detectDragGesturesAfterLongPress(
@@ -407,11 +463,11 @@ private fun OrderCard(
                         Icon(
                             Icons.Default.DragHandle,
                             contentDescription = "Drag to advance status",
-                            tint = TextMuted,
+                            tint = AppColors.TextMuted,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(6.dp))
-                        Text("Drag → next status", fontSize = 12.sp, color = TextMuted)
+                        Text("Drag → next status", fontSize = 12.sp, color = AppColors.TextMuted)
                     }
                 } else {
                     Spacer(Modifier.width(1.dp))
@@ -424,12 +480,12 @@ private fun OrderCard(
                         modifier = Modifier
                             .size(34.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFFF0EE))
+                            .background(AppColors.CancelButtonBackground)
                     ) {
                         Icon(
                             Icons.Default.Cancel,
                             contentDescription = "Cancel order",
-                            tint = Cancelled,
+                            tint = AppColors.Cancelled,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -442,46 +498,45 @@ private fun OrderCard(
 
 @Composable
 private fun StatusBadge(status: String) {
-    val (bg, label) = when (status) {
-        "pending" -> Pending.copy(alpha = 0.15f) to Pending
-        "confirmed" -> Active.copy(alpha = 0.15f) to Active
-        "shipped" -> Active.copy(alpha = 0.15f) to Active
-        "in_transit" -> Active.copy(alpha = 0.15f) to Active
-        "delivered" -> Delivered.copy(alpha = 0.15f) to Delivered
-        "cancelled" -> Cancelled.copy(alpha = 0.15f) to Cancelled
-        else -> Color.LightGray.copy(alpha = 0.15f) to TextMuted
+    val statusColor = when (status) {
+        "pending" -> AppColors.Pending
+        "confirmed", "shipped", "in_transit" -> AppColors.Active
+        "delivered" -> AppColors.Delivered
+        "cancelled" -> AppColors.Cancelled
+        else -> AppColors.UnknownStatus
     }
 
-    val displayLabel = status.replace("_", " ").replaceFirstChar { it.uppercase() }
-
+    val displayWord = status.replace("_", " ").replaceFirstChar { it.uppercase() }
+//coming from firestore
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(bg)
+            .background(statusColor.copy(alpha = 0.15f))
+
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
-            text = displayLabel,
+            text = displayWord,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = label
+            color = statusColor
         )
     }
 }
 
-
 @Composable
-private fun StatusProgressBar(currentStatus: String) {
-    val currentIndex = STATUS_FLOW.indexOf(currentStatus).coerceAtLeast(0)
+private fun StatusProgressBar(currentStatus: String, statusFlow: List<String>) {
+    val currentIndex =
+        statusFlow.indexOf(currentStatus).coerceAtLeast(0)//so it doesnt become negative
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        STATUS_FLOW.forEachIndexed { index, status ->
+        statusFlow.forEachIndexed { index, status ->
             val isReached = index <= currentIndex
             val color by animateColorAsState(
-                if (isReached) Terracotta else Color(0xFFE5DDD5),
+                if (isReached) AppColors.Terracotta else AppColors.DividerLight,
                 label = "progress_$index"
             )
             Box(
@@ -498,11 +553,11 @@ private fun StatusProgressBar(currentStatus: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("Pending", fontSize = 9.sp, color = TextMuted)
-        Text("Confirmed", fontSize = 9.sp, color = TextMuted)
-        Text("Shipped", fontSize = 9.sp, color = TextMuted)
-        Text("Transit", fontSize = 9.sp, color = TextMuted)
-        Text("Delivered", fontSize = 9.sp, color = TextMuted)
+
+        statusFlow.forEach { status ->
+            val label = status.replace("_", " ").replaceFirstChar { it.uppercase() }
+            Text(label, fontSize = 9.sp, color = AppColors.TextMuted)
+        }
     }
 }
 
@@ -510,14 +565,13 @@ private fun StatusProgressBar(currentStatus: String) {
 @Composable
 private fun LabelValue(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, fontSize = 11.sp, color = TextMuted)
+        Text(label, fontSize = 11.sp, color = AppColors.TextMuted)
         Text(
             text = value,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = TextDark,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            color = AppColors.TextDark
+
         )
     }
 }
@@ -525,79 +579,41 @@ private fun LabelValue(label: String, value: String) {
 
 @Composable
 private fun EmptyState(tab: OrderTab) {
+
     val (emoji, message) = when (tab) {
-        OrderTab.PENDING -> "📭" to "No pending orders right now."
-        OrderTab.ACTIVE -> "📦" to "No active orders at the moment."
+        OrderTab.PENDING -> "📭" to "No pending orders "
+        OrderTab.ACTIVE -> "📦" to "No active orders "
         OrderTab.PREVIOUS -> "🗂️" to "No previous orders found."
     }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
             Text(emoji, fontSize = 40.sp)
             Spacer(Modifier.height(8.dp))
-            Text(message, color = TextMuted, fontSize = 15.sp)
+            Text(message, color = AppColors.TextMuted, fontSize = 15.sp)
         }
     }
 }
 
 
 @Composable
-private fun CancelOrderDialog(
+fun CancelOrderDialog(
     uiState: OrderManagementUiState,
     onReasonChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text(
-                "Cancel order?",
-                fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
-        },
-        text = {
-            Column {
-                Text(
-                    "This can't be undone. Please provide a reason so the client knows why.",
-                    fontSize = 14.sp,
-                    color = TextMuted
-                )
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = uiState.cancelReason,
-                    onValueChange = onReasonChange,
-                    placeholder = { Text("Reason for cancellation…", fontSize = 13.sp) },
-                    minLines = 3,
-                    maxLines = 5,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Terracotta,
-                        unfocusedBorderColor = Color(0xFFE0D8D0)
-                    )
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                enabled = uiState.cancelReason.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Cancelled,
-                    disabledContainerColor = Cancelled.copy(alpha = 0.4f)
-                ),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("Yes, cancel order", color = Color.White)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Go back", color = TextMuted)
-            }
-        }
+    ConfirmationDialog(
+        title = "Cancel order?",
+        message = "This can't be undone. Please provide a reason so the client knows why.",
+        confirmLabel = "Yes, cancel order",
+        confirmColor = AppColors.Cancelled,
+        inputValue = uiState.cancelReason,
+        inputPlaceholder = "Reason for cancellation…",
+        onInputChange = onReasonChange,
+        confirmEnabled = uiState.cancelReason.isNotBlank(),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss
     )
 }

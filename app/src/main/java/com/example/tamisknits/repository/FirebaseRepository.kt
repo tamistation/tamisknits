@@ -5,10 +5,12 @@ import com.example.tamisknits.models.Cart
 import com.example.tamisknits.models.CustomizationRequest
 import com.example.tamisknits.models.Delivery
 import com.example.tamisknits.models.Favorites
+import com.example.tamisknits.models.OrderStatusConfig
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Permissions
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.models.SupportTickets
+import com.example.tamisknits.models.TicketMessage
 import com.example.tamisknits.models.User
 import com.example.tamisknits.models.UserType
 import com.google.firebase.auth.FirebaseAuth
@@ -832,9 +834,99 @@ class FirebaseRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete request") }
     }
 
+    // get tickets by client
+    fun getTicketsByClient(clientId: String): Flow<List<SupportTickets>> = callbackFlow {
+        val listener = firestore.collection("SupportTickets")
+            .whereEqualTo("clientId", clientId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList()); return@addSnapshotListener
+                }
+                val list = snapshot?.documents?.map { doc ->
+                    SupportTickets(
+                        ticketId = doc.id,
+                        clientId = doc.getString("clientId") ?: "",
+                        adminId = doc.getString("adminId") ?: "",
+                        subject = doc.getString("subject") ?: "",
+                        message = doc.getString("message") ?: "",
+                        status = doc.getString("status") ?: "open"
+                    )
+                } ?: emptyList()
+                trySend(list)
+            }
+        awaitClose { listener.remove() }
+    }
 
+    // add a chat message to a ticket
+    fun addTicketMessage(
+        msg: TicketMessage,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val data = hashMapOf(
+            "ticketId" to msg.ticketId,
+            "senderId" to msg.senderId,
+            "senderType" to msg.senderType,
+            "message" to msg.message,
+            "sentAt" to FieldValue.serverTimestamp()
+        )
+        firestore.collection("TicketMessages").add(data)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it.message ?: "Failed to send message") }
+    }
+
+    // live stream of messages for a ticket, ordered by time
+    fun getTicketMessages(ticketId: String): Flow<List<TicketMessage>> = callbackFlow {
+        val listener = firestore.collection("TicketMessages")
+            .whereEqualTo("ticketId", ticketId)
+            .orderBy("sentAt")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList()); return@addSnapshotListener
+                }
+                val list = snapshot?.documents?.map { doc ->
+                    TicketMessage(
+                        messageId = doc.id,
+                        ticketId = doc.getString("ticketId") ?: "",
+                        senderId = doc.getString("senderId") ?: "",
+                        senderType = doc.getString("senderType") ?: "",
+                        message = doc.getString("message") ?: "",
+                        sentAt = doc.getTimestamp("sentAt")?.seconds ?: 0L
+                    )
+                } ?: emptyList()
+                trySend(list)
+            }
+        awaitClose { listener.remove() }
+
+
+    }
+
+
+    // get order status configuration (pending/active/previous groupings + full flow)
+    fun getOrderStatusConfig(): Flow<OrderStatusConfig> = callbackFlow {
+        val listener = firestore.collection("config").document("orderStatuses")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(OrderStatusConfig()); return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val config = OrderStatusConfig(
+                        pending = (snapshot.get("pending") as? List<String>) ?: listOf("pending"),
+                        active = (snapshot.get("active") as? List<String>)
+                            ?: listOf("confirmed", "shipped", "in_transit"),
+                        previous = (snapshot.get("previous") as? List<String>)
+                            ?: listOf("delivered", "cancelled"),
+                        flow = (snapshot.get("flow") as? List<String>)
+                            ?: listOf("pending", "confirmed", "shipped", "in_transit", "delivered")
+                    )
+                    trySend(config)
+                } else {
+                    trySend(OrderStatusConfig())
+                }
+            }
+        awaitClose { listener.remove() }
+    }
     fun testFullScenario() {
-
 
         val permClientOrder = Permissions(name = "place/view own orders")
         val permAdminUsers = Permissions(name = "add/edit/delete users")
@@ -849,356 +941,233 @@ class FirebaseRepository(
 
             addPermission(permAdminUsers, onSuccess = { adminUsersPermId ->
                 addPermission(permAdminProducts, onSuccess = { adminProductsPermId ->
-                    addPermission(
-                        permAdminTickets,
-                        onSuccess = { adminTicketsPermId ->
-                            addPermission(
-                                permAdminCustomization,
-                                onSuccess = { adminCustomPermId ->
-                                    addPermission(
-                                        permDeliveryAssign,
-                                        onSuccess = { deliveryPermId ->
+                    addPermission(permAdminTickets, onSuccess = { adminTicketsPermId ->
+                        addPermission(permAdminCustomization, onSuccess = { adminCustomPermId ->
+                            addPermission(permDeliveryAssign, onSuccess = { deliveryPermId ->
 
+                                val clientTypeObj = UserType(
+                                    type = "client",
+                                    permissionIds = listOf(clientPermId)
+                                )
+                                val adminTypeObj = UserType(
+                                    type = "admin",
+                                    permissionIds = listOf(
+                                        adminUsersPermId,
+                                        adminProductsPermId,
+                                        adminTicketsPermId,
+                                        adminCustomPermId
+                                    )
+                                )
+                                val deliveryTypeObj = UserType(
+                                    type = "delivery",
+                                    permissionIds = listOf(deliveryPermId)
+                                )
 
-                                            val clientTypeObj = UserType(
-                                                type = "client",
-                                                permissionIds = listOf(clientPermId)
+                                addUserType(clientTypeObj, onSuccess = { clientTypeId ->
+                                    Log.d("SCENARIO", "UserType(client) added: $clientTypeId")
+
+                                    addUserType(adminTypeObj, onSuccess = { adminTypeId ->
+                                        Log.d("SCENARIO", "UserType(admin) added: $adminTypeId")
+
+                                        addUserType(deliveryTypeObj, onSuccess = { deliveryTypeId ->
+                                            Log.d(
+                                                "SCENARIO",
+                                                "UserType(delivery) added: $deliveryTypeId"
                                             )
-                                            val adminTypeObj = UserType(
-                                                type = "admin",
-                                                permissionIds = listOf(
-                                                    adminUsersPermId,
-                                                    adminProductsPermId,
-                                                    adminTicketsPermId,
-                                                    adminCustomPermId
-                                                )
+
+                                            val clientUser = User(
+                                                uid = "client_001",
+                                                name = "Tamara Client",
+                                                email = "tamara@test.com",
+                                                phone = "03111111",
+                                                userType = clientTypeObj.copy(usertypeId = clientTypeId)
                                             )
-                                            val deliveryTypeObj = UserType(
-                                                type = "delivery",
-                                                permissionIds = listOf(deliveryPermId)
+                                            val adminUser = User(
+                                                uid = "admin_001",
+                                                name = "Admin Test",
+                                                email = "admin@test.com",
+                                                phone = "03222222",
+                                                userType = adminTypeObj.copy(usertypeId = adminTypeId)
+                                            )
+                                            val deliveryUser = User(
+                                                uid = "delivery_001",
+                                                name = "Speedy Delivery Co",
+                                                email = "delivery@test.com",
+                                                phone = "03333333",
+                                                userType = deliveryTypeObj.copy(usertypeId = deliveryTypeId)
                                             )
 
-                                            addUserType(
-                                                clientTypeObj,
-                                                onSuccess = { clientTypeId ->
-                                                    Log.d(
-                                                        "SCENARIO",
-                                                        "UserType(client) added: $clientTypeId"
-                                                    )
+                                            addUser(clientUser, clientTypeId, onSuccess = {
+                                                Log.d("SCENARIO", "Client user added")
 
-                                                    addUserType(
-                                                        adminTypeObj,
-                                                        onSuccess = { adminTypeId ->
-                                                            Log.d(
-                                                                "SCENARIO",
-                                                                "UserType(admin) added: $adminTypeId"
+                                                addUser(adminUser, adminTypeId, onSuccess = {
+                                                    Log.d("SCENARIO", "Admin user added")
+
+                                                    addUser(
+                                                        deliveryUser,
+                                                        deliveryTypeId,
+                                                        onSuccess = {
+                                                            Log.d("SCENARIO", "Delivery user added")
+
+                                                            val product = Products(
+                                                                productId = "",
+                                                                name = "Crochet Bag",
+                                                                description = "Handmade tshirt yarn bag",
+                                                                price = 25.0,
+                                                                category = "bags",
+                                                                imageUrl = "https://test.com/image.jpg",
+                                                                stock = 10,
+                                                                isCustomizable = true
                                                             )
 
-                                                            addUserType(
-                                                                deliveryTypeObj,
-                                                                onSuccess = { deliveryTypeId ->
+                                                            addProduct(
+                                                                product,
+                                                                onSuccess = { productId ->
                                                                     Log.d(
                                                                         "SCENARIO",
-                                                                        "UserType(delivery) added: $deliveryTypeId"
+                                                                        "Product added: $productId"
                                                                     )
 
-
-                                                                    val clientUser = User(
-                                                                        uid = "client_001",
-                                                                        name = "Tamara Client",
-                                                                        email = "tamara@test.com",
-                                                                        phone = "03111111",
-                                                                        userType = clientTypeObj.copy(
-                                                                            usertypeId = clientTypeId
-                                                                        )
-                                                                    )
-                                                                    val adminUser = User(
-                                                                        uid = "admin_001",
-                                                                        name = "Admin Test",
-                                                                        email = "admin@test.com",
-                                                                        phone = "03222222",
-                                                                        userType = adminTypeObj.copy(
-                                                                            usertypeId = adminTypeId
-                                                                        )
-                                                                    )
-                                                                    val deliveryUser = User(
-                                                                        uid = "delivery_001",
-                                                                        name = "Speedy Delivery Co",
-                                                                        email = "delivery@test.com",
-                                                                        phone = "03333333",
-                                                                        userType = deliveryTypeObj.copy(
-                                                                            usertypeId = deliveryTypeId
-                                                                        )
+                                                                    val favorite = Favorites(
+                                                                        favoriteId = "",
+                                                                        clientId = clientUser.uid,
+                                                                        productId = productId
                                                                     )
 
-                                                                    addUser(
-                                                                        clientUser,
-                                                                        clientTypeId,
-                                                                        onSuccess = {
+                                                                    addToFavorites(
+                                                                        favorite,
+                                                                        onSuccess = { favoriteId ->
                                                                             Log.d(
                                                                                 "SCENARIO",
-                                                                                "Client user added"
+                                                                                "Favorite added: $favoriteId"
                                                                             )
 
-                                                                            addUser(
-                                                                                adminUser,
-                                                                                adminTypeId,
-                                                                                onSuccess = {
+                                                                            val customizationRequest =
+                                                                                CustomizationRequest(
+                                                                                    requestId = "",
+                                                                                    clientId = clientUser.uid,
+                                                                                    adminId = adminUser.uid,
+                                                                                    productId = productId,
+                                                                                    details = "I want a blue bag with long handles",
+                                                                                    colorPreference = "blue",
+                                                                                    sizePreference = "large",
+                                                                                    status = "pending"
+                                                                                )
+
+                                                                            addCustomizationRequest(
+                                                                                customizationRequest,
+                                                                                onSuccess = { requestId ->
                                                                                     Log.d(
                                                                                         "SCENARIO",
-                                                                                        "Admin user added"
+                                                                                        "Customization request added: $requestId"
                                                                                     )
 
-                                                                                    addUser(
-                                                                                        deliveryUser,
-                                                                                        deliveryTypeId,
-                                                                                        onSuccess = {
+                                                                                    val cart = Cart(
+                                                                                        cartId = "",
+                                                                                        clientId = clientUser.uid,
+                                                                                        productId = productId,
+                                                                                        quantity = 2,
+                                                                                        totalPrice = 50.0,
+                                                                                        deliveryId = ""
+                                                                                    )
+
+                                                                                    addToCart(
+                                                                                        cart,
+                                                                                        onSuccess = { cartId ->
                                                                                             Log.d(
                                                                                                 "SCENARIO",
-                                                                                                "Delivery user added"
+                                                                                                "Cart added: $cartId"
                                                                                             )
 
-
-                                                                                            val product =
-                                                                                                Products(
-                                                                                                    productId = "",
-                                                                                                    name = "Crochet Bag",
-                                                                                                    description = "Handmade tshirt yarn bag",
-                                                                                                    price = 25.0,
-                                                                                                    category = "bags",
-                                                                                                    imageUrl = "https://test.com/image.jpg",
-                                                                                                    stock = 10,
-                                                                                                    isCustomizable = true
+                                                                                            val delivery =
+                                                                                                Delivery(
+                                                                                                    deliveryId = "",
+                                                                                                    orderId = "",
+                                                                                                    clientId = clientUser.uid,
+                                                                                                    deliveryPersonId = deliveryUser.uid,
+                                                                                                    address = "Baabda, Mount Lebanon",
+                                                                                                    status = "pending"
                                                                                                 )
 
-                                                                                            addProduct(
-                                                                                                product,
-                                                                                                onSuccess = { productId ->
+                                                                                            addDelivery(
+                                                                                                delivery,
+                                                                                                onSuccess = { deliveryId ->
                                                                                                     Log.d(
                                                                                                         "SCENARIO",
-                                                                                                        "Product added: $productId"
+                                                                                                        "Delivery added: $deliveryId"
                                                                                                     )
 
-                                                                                                    // ---------- STEP 5: Favorite ----------
-                                                                                                    val favorite =
-                                                                                                        Favorites(
-                                                                                                            favoriteId = "",
-                                                                                                            clientId = clientUser.uid,
-                                                                                                            productId = productId
-                                                                                                        )
-                                                                                                    addToFavorites(
-                                                                                                        favorite,
-                                                                                                        onSuccess = { favoriteId ->
+                                                                                                    setCartDelivery(
+                                                                                                        cartId,
+                                                                                                        deliveryId,
+                                                                                                        onSuccess = {
                                                                                                             Log.d(
                                                                                                                 "SCENARIO",
-                                                                                                                "Favorite added: $favoriteId"
+                                                                                                                "Delivery attached to cart"
+                                                                                                            )
+                                                                                                        },
+                                                                                                        onFailure = {
+                                                                                                            Log.e(
+                                                                                                                "SCENARIO",
+                                                                                                                "Set cart delivery failed: $it"
+                                                                                                            )
+                                                                                                        }
+                                                                                                    )
+
+                                                                                                    val ticket =
+                                                                                                        SupportTickets(
+                                                                                                            ticketId = "",
+                                                                                                            clientId = clientUser.uid,
+                                                                                                            adminId = adminUser.uid,
+                                                                                                            subject = "Where is my order?",
+                                                                                                            message = "I placed an order and haven't heard back",
+                                                                                                            status = "open"
+                                                                                                        )
+
+                                                                                                    addSupportTicket(
+                                                                                                        ticket,
+                                                                                                        onSuccess = { ticketId ->
+                                                                                                            Log.d(
+                                                                                                                "SCENARIO",
+                                                                                                                "Support ticket added: $ticketId"
                                                                                                             )
 
-                                                                                                            // ---------- STEP 6: CustomizationRequest ----------
-                                                                                                            val customizationRequest =
-                                                                                                                CustomizationRequest(
-                                                                                                                    requestId = "",
-                                                                                                                    clientId = clientUser.uid,
-                                                                                                                    adminId = adminUser.uid,
-                                                                                                                    productId = productId,
-                                                                                                                    details = "I want a blue bag with long handles",
-                                                                                                                    colorPreference = "blue",
-                                                                                                                    sizePreference = "large",
-                                                                                                                    status = "pending"
+                                                                                                            val clientMessage =
+                                                                                                                TicketMessage(
+                                                                                                                    ticketId = ticketId,
+                                                                                                                    senderId = clientUser.uid,
+                                                                                                                    senderType = "client",
+                                                                                                                    message = "Hi, I placed an order 3 days ago and haven't received any update."
                                                                                                                 )
-                                                                                                            addCustomizationRequest(
-                                                                                                                customizationRequest,
-                                                                                                                onSuccess = { requestId ->
+
+                                                                                                            addTicketMessage(
+                                                                                                                clientMessage,
+                                                                                                                onSuccess = {
                                                                                                                     Log.d(
                                                                                                                         "SCENARIO",
-                                                                                                                        "Customization request added: $requestId"
+                                                                                                                        "Client message added"
                                                                                                                     )
 
-                                                                                                                    // ---------- STEP 7: Cart ----------
-                                                                                                                    val cart =
-                                                                                                                        Cart(
-                                                                                                                            cartId = "",
-                                                                                                                            clientId = clientUser.uid,
-                                                                                                                            productId = productId,
-                                                                                                                            quantity = 2,
-                                                                                                                            totalPrice = 50.0,
-                                                                                                                            deliveryId = ""
+                                                                                                                    val adminMessage =
+                                                                                                                        TicketMessage(
+                                                                                                                            ticketId = ticketId,
+                                                                                                                            senderId = adminUser.uid,
+                                                                                                                            senderType = "admin",
+                                                                                                                            message = "Hi Tamara! Let me check on your order right away."
                                                                                                                         )
-                                                                                                                    addToCart(
-                                                                                                                        cart,
-                                                                                                                        onSuccess = { cartId ->
+
+                                                                                                                    addTicketMessage(
+                                                                                                                        adminMessage,
+                                                                                                                        onSuccess = {
                                                                                                                             Log.d(
                                                                                                                                 "SCENARIO",
-                                                                                                                                "Cart added: $cartId"
+                                                                                                                                "Admin message added"
                                                                                                                             )
-
-                                                                                                                            // ---------- STEP 7b: Delivery for that cart ----------
-                                                                                                                            val delivery =
-                                                                                                                                Delivery(
-                                                                                                                                    deliveryId = "",
-                                                                                                                                    orderId = "",
-                                                                                                                                    clientId = clientUser.uid,
-                                                                                                                                    deliveryPersonId = deliveryUser.uid,
-                                                                                                                                    address = "Baabda, Mount Lebanon",
-                                                                                                                                    status = "pending"
-                                                                                                                                )
-                                                                                                                            addDelivery(
-                                                                                                                                delivery,
-                                                                                                                                onSuccess = { deliveryId ->
-                                                                                                                                    Log.d(
-                                                                                                                                        "SCENARIO",
-                                                                                                                                        "Delivery added: $deliveryId"
-                                                                                                                                    )
-
-                                                                                                                                    setCartDelivery(
-                                                                                                                                        cartId,
-                                                                                                                                        deliveryId,
-                                                                                                                                        onSuccess = {
-                                                                                                                                            Log.d(
-                                                                                                                                                "SCENARIO",
-                                                                                                                                                "Delivery attached to cart"
-                                                                                                                                            )
-                                                                                                                                        },
-                                                                                                                                        onFailure = {
-                                                                                                                                            Log.e(
-                                                                                                                                                "SCENARIO",
-                                                                                                                                                "Set cart delivery failed: $it"
-                                                                                                                                            )
-                                                                                                                                        }
-                                                                                                                                    )
-
-                                                                                                                                    // ---------- STEP 8: Support ticket ----------
-                                                                                                                                    val ticket =
-                                                                                                                                        SupportTickets(
-                                                                                                                                            ticketId = "",
-                                                                                                                                            clientId = clientUser.uid,
-                                                                                                                                            adminId = adminUser.uid,
-                                                                                                                                            subject = "Where is my order?",
-                                                                                                                                            message = "I placed an order and haven't heard back",
-                                                                                                                                            status = "open"
-                                                                                                                                        )
-                                                                                                                                    addSupportTicket(
-                                                                                                                                        ticket,
-                                                                                                                                        onSuccess = { ticketId ->
-                                                                                                                                            Log.d(
-                                                                                                                                                "SCENARIO",
-                                                                                                                                                "Support ticket added: $ticketId"
-                                                                                                                                            )
-
-                                                                                                                                            // ---------- STEP 9: Orders with different states ----------
-                                                                                                                                            val pendingOrder =
-                                                                                                                                                Orders(
-                                                                                                                                                    orderId = "",
-                                                                                                                                                    clientId = clientUser.uid,
-                                                                                                                                                    deliveryId = deliveryId,
-                                                                                                                                                    items = listOf(
-                                                                                                                                                        mapOf(
-                                                                                                                                                            "productId" to productId,
-                                                                                                                                                            "quantity" to 2
-                                                                                                                                                        )
-                                                                                                                                                    ),
-                                                                                                                                                    totalPrice = 50.0,
-                                                                                                                                                    status = "pending",
-                                                                                                                                                    shippingAddress = mapOf(
-                                                                                                                                                        "city" to "Beirut",
-                                                                                                                                                        "street" to "Main St"
-                                                                                                                                                    ),
-                                                                                                                                                    isCustomOrder = false
-                                                                                                                                                )
-                                                                                                                                            val shippedOrder =
-                                                                                                                                                pendingOrder.copy(
-                                                                                                                                                    status = "shipped"
-                                                                                                                                                )
-                                                                                                                                            val deliveredOrder =
-                                                                                                                                                pendingOrder.copy(
-                                                                                                                                                    status = "delivered"
-                                                                                                                                                )
-                                                                                                                                            val cancelledOrder =
-                                                                                                                                                pendingOrder.copy(
-                                                                                                                                                    status = "cancelled"
-                                                                                                                                                )
-
-                                                                                                                                            addOrder(
-                                                                                                                                                pendingOrder,
-                                                                                                                                                onSuccess = { id ->
-                                                                                                                                                    Log.d(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(pending) added: $id"
-                                                                                                                                                    )
-                                                                                                                                                },
-                                                                                                                                                onFailure = {
-                                                                                                                                                    Log.e(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(pending) failed: $it"
-                                                                                                                                                    )
-                                                                                                                                                })
-
-                                                                                                                                            addOrder(
-                                                                                                                                                shippedOrder,
-                                                                                                                                                onSuccess = { id ->
-                                                                                                                                                    Log.d(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(shipped) added: $id"
-                                                                                                                                                    )
-                                                                                                                                                },
-                                                                                                                                                onFailure = {
-                                                                                                                                                    Log.e(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(shipped) failed: $it"
-                                                                                                                                                    )
-                                                                                                                                                })
-
-                                                                                                                                            addOrder(
-                                                                                                                                                deliveredOrder,
-                                                                                                                                                onSuccess = { id ->
-                                                                                                                                                    Log.d(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(delivered) added: $id"
-                                                                                                                                                    )
-                                                                                                                                                },
-                                                                                                                                                onFailure = {
-                                                                                                                                                    Log.e(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(delivered) failed: $it"
-                                                                                                                                                    )
-                                                                                                                                                })
-
-                                                                                                                                            addOrder(
-                                                                                                                                                cancelledOrder,
-                                                                                                                                                onSuccess = { id ->
-                                                                                                                                                    Log.d(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(cancelled) added: $id"
-                                                                                                                                                    )
-                                                                                                                                                },
-                                                                                                                                                onFailure = {
-                                                                                                                                                    Log.e(
-                                                                                                                                                        "SCENARIO",
-                                                                                                                                                        "Order(cancelled) failed: $it"
-                                                                                                                                                    )
-                                                                                                                                                })
-
-                                                                                                                                        },
-                                                                                                                                        onFailure = {
-                                                                                                                                            Log.e(
-                                                                                                                                                "SCENARIO",
-                                                                                                                                                "Support ticket failed: $it"
-                                                                                                                                            )
-                                                                                                                                        })
-
-                                                                                                                                },
-                                                                                                                                onFailure = {
-                                                                                                                                    Log.e(
-                                                                                                                                        "SCENARIO",
-                                                                                                                                        "Add delivery failed: $it"
-                                                                                                                                    )
-                                                                                                                                })
-
                                                                                                                         },
                                                                                                                         onFailure = {
                                                                                                                             Log.e(
                                                                                                                                 "SCENARIO",
-                                                                                                                                "Add to cart failed: $it"
+                                                                                                                                "Admin message failed: $it"
                                                                                                                             )
                                                                                                                         })
 
@@ -1206,7 +1175,99 @@ class FirebaseRepository(
                                                                                                                 onFailure = {
                                                                                                                     Log.e(
                                                                                                                         "SCENARIO",
-                                                                                                                        "Customization request failed: $it"
+                                                                                                                        "Client message failed: $it"
+                                                                                                                    )
+                                                                                                                })
+
+                                                                                                            val pendingOrder =
+                                                                                                                Orders(
+                                                                                                                    orderId = "",
+                                                                                                                    clientId = clientUser.uid,
+                                                                                                                    deliveryId = deliveryId,
+                                                                                                                    items = listOf(
+                                                                                                                        mapOf(
+                                                                                                                            "productId" to productId,
+                                                                                                                            "quantity" to 2
+                                                                                                                        )
+                                                                                                                    ),
+                                                                                                                    totalPrice = 50.0,
+                                                                                                                    status = "pending",
+                                                                                                                    shippingAddress = mapOf(
+                                                                                                                        "city" to "Beirut",
+                                                                                                                        "street" to "Main St"
+                                                                                                                    ),
+                                                                                                                    isCustomOrder = false
+                                                                                                                )
+                                                                                                            val shippedOrder =
+                                                                                                                pendingOrder.copy(
+                                                                                                                    status = "shipped"
+                                                                                                                )
+                                                                                                            val deliveredOrder =
+                                                                                                                pendingOrder.copy(
+                                                                                                                    status = "delivered"
+                                                                                                                )
+                                                                                                            val cancelledOrder =
+                                                                                                                pendingOrder.copy(
+                                                                                                                    status = "cancelled"
+                                                                                                                )
+
+                                                                                                            addOrder(
+                                                                                                                pendingOrder,
+                                                                                                                onSuccess = { id ->
+                                                                                                                    Log.d(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(pending) added: $id"
+                                                                                                                    )
+                                                                                                                },
+                                                                                                                onFailure = {
+                                                                                                                    Log.e(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(pending) failed: $it"
+                                                                                                                    )
+                                                                                                                })
+
+                                                                                                            addOrder(
+                                                                                                                shippedOrder,
+                                                                                                                onSuccess = { id ->
+                                                                                                                    Log.d(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(shipped) added: $id"
+                                                                                                                    )
+                                                                                                                },
+                                                                                                                onFailure = {
+                                                                                                                    Log.e(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(shipped) failed: $it"
+                                                                                                                    )
+                                                                                                                })
+
+                                                                                                            addOrder(
+                                                                                                                deliveredOrder,
+                                                                                                                onSuccess = { id ->
+                                                                                                                    Log.d(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(delivered) added: $id"
+                                                                                                                    )
+                                                                                                                },
+                                                                                                                onFailure = {
+                                                                                                                    Log.e(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(delivered) failed: $it"
+                                                                                                                    )
+                                                                                                                })
+
+                                                                                                            addOrder(
+                                                                                                                cancelledOrder,
+                                                                                                                onSuccess = { id ->
+                                                                                                                    Log.d(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(cancelled) added: $id"
+                                                                                                                    )
+                                                                                                                },
+                                                                                                                onFailure = {
+                                                                                                                    Log.e(
+                                                                                                                        "SCENARIO",
+                                                                                                                        "Order(cancelled) failed: $it"
                                                                                                                     )
                                                                                                                 })
 
@@ -1214,7 +1275,7 @@ class FirebaseRepository(
                                                                                                         onFailure = {
                                                                                                             Log.e(
                                                                                                                 "SCENARIO",
-                                                                                                                "Add favorite failed: $it"
+                                                                                                                "Support ticket failed: $it"
                                                                                                             )
                                                                                                         })
 
@@ -1222,7 +1283,7 @@ class FirebaseRepository(
                                                                                                 onFailure = {
                                                                                                     Log.e(
                                                                                                         "SCENARIO",
-                                                                                                        "Add product failed: $it"
+                                                                                                        "Add delivery failed: $it"
                                                                                                     )
                                                                                                 })
 
@@ -1230,7 +1291,7 @@ class FirebaseRepository(
                                                                                         onFailure = {
                                                                                             Log.e(
                                                                                                 "SCENARIO",
-                                                                                                "Add delivery user failed: $it"
+                                                                                                "Add to cart failed: $it"
                                                                                             )
                                                                                         })
 
@@ -1238,7 +1299,7 @@ class FirebaseRepository(
                                                                                 onFailure = {
                                                                                     Log.e(
                                                                                         "SCENARIO",
-                                                                                        "Add admin user failed: $it"
+                                                                                        "Customization request failed: $it"
                                                                                     )
                                                                                 })
 
@@ -1246,7 +1307,7 @@ class FirebaseRepository(
                                                                         onFailure = {
                                                                             Log.e(
                                                                                 "SCENARIO",
-                                                                                "Add client user failed: $it"
+                                                                                "Add favorite failed: $it"
                                                                             )
                                                                         })
 
@@ -1254,7 +1315,7 @@ class FirebaseRepository(
                                                                 onFailure = {
                                                                     Log.e(
                                                                         "SCENARIO",
-                                                                        "Add UserType(delivery) failed: $it"
+                                                                        "Add product failed: $it"
                                                                     )
                                                                 })
 
@@ -1262,42 +1323,52 @@ class FirebaseRepository(
                                                         onFailure = {
                                                             Log.e(
                                                                 "SCENARIO",
-                                                                "Add UserType(admin) failed: $it"
+                                                                "Add delivery user failed: $it"
                                                             )
                                                         })
 
-                                                },
-                                                onFailure = {
-                                                    Log.e(
-                                                        "SCENARIO",
-                                                        "Add UserType(client) failed: $it"
-                                                    )
+                                                }, onFailure = {
+                                                    Log.e("SCENARIO", "Add admin user failed: $it")
                                                 })
 
-                                        },
-                                        onFailure = {
-                                            Log.e(
-                                                "SCENARIO",
-                                                "Add Permission(delivery) failed: $it"
-                                            )
-                                        })
-                                },
-                                onFailure = {
-                                    Log.e(
-                                        "SCENARIO",
-                                        "Add Permission(admin custom) failed: $it"
-                                    )
-                                })
-                        },
-                        onFailure = {
-                            Log.e(
-                                "SCENARIO",
-                                "Add Permission(admin tickets) failed: $it"
-                            )
-                        })
-                }, onFailure = { Log.e("SCENARIO", "Add Permission(admin products) failed: $it") })
-            }, onFailure = { Log.e("SCENARIO", "Add Permission(admin users) failed: $it") })
+                                            }, onFailure = {
+                                                Log.e("SCENARIO", "Add client user failed: $it")
+                                            })
 
-        }, onFailure = { Log.e("SCENARIO", "Add Permission(client) failed: $it") })
+                                        }, onFailure = {
+                                            Log.e("SCENARIO", "Add UserType(delivery) failed: $it")
+                                        })
+
+                                    }, onFailure = {
+                                        Log.e("SCENARIO", "Add UserType(admin) failed: $it")
+                                    })
+
+                                }, onFailure = {
+                                    Log.e("SCENARIO", "Add UserType(client) failed: $it")
+                                })
+
+                            }, onFailure = {
+                                Log.e("SCENARIO", "Add Permission(delivery) failed: $it")
+                            })
+
+                        }, onFailure = {
+                            Log.e("SCENARIO", "Add Permission(admin custom) failed: $it")
+                        })
+
+                    }, onFailure = {
+                        Log.e("SCENARIO", "Add Permission(admin tickets) failed: $it")
+                    })
+
+                }, onFailure = {
+                    Log.e("SCENARIO", "Add Permission(admin products) failed: $it")
+                })
+
+            }, onFailure = {
+                Log.e("SCENARIO", "Add Permission(admin users) failed: $it")
+            })
+
+        }, onFailure = {
+            Log.e("SCENARIO", "Add Permission(client) failed: $it")
+        })
     }
 }
