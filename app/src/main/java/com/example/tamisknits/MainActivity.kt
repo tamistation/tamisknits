@@ -7,16 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tamisknits.features.admin.orders.OrderManagementPage
 import dagger.hilt.android.AndroidEntryPoint
+import com.example.tamisknits.navigation.AppNavHost
 
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
-
+@AndroidEntryPoint //hilt
+class MainActivity : ComponentActivity() { //entry point of the app
+    //onCreate() is the first lifecycle method that fires when the Activity is created.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
+        enableEdgeToEdge()//to fill all edges
         setContent {
-            OrderManagementPage(viewModel = hiltViewModel())
+            AppNavHost()
         }
     }
 }

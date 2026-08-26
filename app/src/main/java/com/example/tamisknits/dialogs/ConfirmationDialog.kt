@@ -20,8 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.theme.AppColors
 
+//this is a reusable popup dialogue
+//instead of writing one everytime
+// we can customize with different text,color...
 @Composable
-fun ConfirmationDialog(
+fun ConfirmationDialog(// those are the parameter for this function
     title: String,
     message: String,
     confirmLabel: String,
@@ -49,8 +52,8 @@ fun ConfirmationDialog(
                     Spacer(Modifier.height(12.dp))
 
                     OutlinedTextField(
-                        value = inputValue,
-                        onValueChange = onInputChange,
+                        value = inputValue,//new value set ,read
+                        onValueChange = onInputChange,//catches the new text writes it
                         placeholder = { Text(inputPlaceholder, fontSize = 13.sp) },
                         minLines = 3,
                         maxLines = 5,

@@ -1,5 +1,8 @@
 package com.example.tamisknits.models
 
+import java.util.Collections.emptyList
+import java.util.Collections.emptyMap
+
 
 data class Orders(
     val orderId: String = "",
@@ -9,5 +12,5 @@ data class Orders(
     val totalPrice: Double = 0.0,
     val status: String = "pending",
     val shippingAddress: Map<String, String> = emptyMap(),
-    val isCustomOrder: Boolean
+    val isCustomOrder: Boolean = false
 )

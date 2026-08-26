@@ -6,12 +6,12 @@ import com.example.tamisknits.repository.FirebaseRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
+//UI (Compose)  →  ViewModel  →  UseCase  →  Repository  →  Data source (Firestore/API/DB)
 class OrderManagementUseCase @Inject constructor(
 
     private val repository: FirebaseRepository //calling repo
 ) {
     fun getOrders(): Flow<List<Orders>> = repository.getOrders()
-
     //creates list of orders live from repo function get orders
     fun getOrderStatusConfig(): Flow<OrderStatusConfig> = repository.getOrderStatusConfig()
 

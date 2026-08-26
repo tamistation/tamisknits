@@ -8,6 +8,7 @@ import com.example.tamisknits.models.Favorites
 import com.example.tamisknits.models.OrderStatusConfig
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Permissions
+import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.models.SupportTickets
 import com.example.tamisknits.models.TicketMessage
@@ -316,18 +317,24 @@ class FirebaseRepository(
         val data = hashMapOf(
             "name" to product.name,
             "description" to product.description,
-            "price" to product.price,
             "category" to product.category,
             "imageUrl" to product.imageUrl,
-            "stock" to product.stock,
             "isCustomizable" to product.isCustomizable,
+            "variants" to product.variants.map { variant ->
+                mapOf(
+                    "variantId" to variant.variantId,
+                    "size" to variant.size,
+                    "color" to variant.color,
+                    "stock" to variant.stock,
+                    "price" to variant.price
+                )
+            },
             "createdAt" to FieldValue.serverTimestamp()
         )
         firestore.collection("Products").add(data)
             .addOnSuccessListener { doc -> onSuccess(doc.id) }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add product") }
     }
-
 
     fun getProducts(): Flow<List<Products>> = callbackFlow {
         val listener = firestore.collection("Products")
@@ -340,11 +347,18 @@ class FirebaseRepository(
                         productId = doc.id,
                         name = doc.getString("name") ?: "",
                         description = doc.getString("description") ?: "",
-                        price = doc.getDouble("price") ?: 0.0,
                         category = doc.getString("category") ?: "",
                         imageUrl = doc.getString("imageUrl") ?: "",
-                        stock = (doc.getLong("stock") ?: 0L).toInt(),
-                        isCustomizable = doc.getBoolean("isCustomizable") ?: false
+                        isCustomizable = doc.getBoolean("isCustomizable") ?: false,
+                        variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
+                            ProductVariant(
+                                variantId = v["variantId"] as? String ?: "",
+                                size = v["size"] as? String ?: "",
+                                color = v["color"] as? String ?: "",
+                                stock = (v["stock"] as? Long)?.toInt() ?: 0,
+                                price = v["price"] as? Double ?: 0.0
+                            )
+                        } ?: emptyList()
                     )
                 } ?: emptyList()
                 trySend(list)
@@ -363,11 +377,18 @@ class FirebaseRepository(
                             productId = doc.id,
                             name = doc.getString("name") ?: "",
                             description = doc.getString("description") ?: "",
-                            price = doc.getDouble("price") ?: 0.0,
                             category = doc.getString("category") ?: "",
                             imageUrl = doc.getString("imageUrl") ?: "",
-                            stock = (doc.getLong("stock") ?: 0L).toInt(),
-                            isCustomizable = doc.getBoolean("isCustomizable") ?: false
+                            isCustomizable = doc.getBoolean("isCustomizable") ?: false,
+                            variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
+                                ProductVariant(
+                                    variantId = v["variantId"] as? String ?: "",
+                                    size = v["size"] as? String ?: "",
+                                    color = v["color"] as? String ?: "",
+                                    stock = (v["stock"] as? Long)?.toInt() ?: 0,
+                                    price = v["price"] as? Double ?: 0.0
+                                )
+                            } ?: emptyList()
                         )
                     )
                 } else {
@@ -505,6 +526,27 @@ class FirebaseRepository(
                 trySend(list)
             }
         awaitClose { listener.remove() }
+    }
+    fun getOrderById(
+        orderId: String,
+        onSuccess: (Orders) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection("Orders").document(orderId)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val order = doc.toObject(Orders::class.java)?.copy(orderId = doc.id)
+                    if (order != null) {
+                        onSuccess(order)
+                    } else {
+                        onFailure("Failed to parse order")
+                    }
+                } else {
+                    onFailure("Order not found")
+                }
+            }
+            .addOnFailureListener { onFailure(it.message ?: "Failed to get order") }
     }
 
     // get orders by client
@@ -882,6 +924,7 @@ class FirebaseRepository(
             .orderBy("sentAt")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    android.util.Log.e("TicketMessages", "Query failed", error) // add this line
                     trySend(emptyList()); return@addSnapshotListener
                 }
                 val list = snapshot?.documents?.map { doc ->
@@ -925,6 +968,30 @@ class FirebaseRepository(
                 }
             }
         awaitClose { listener.remove() }
+    }
+
+    fun getSupportTicket(
+        ticketId: String,
+        onSuccess: (SupportTickets) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection("SupportTickets").document(ticketId)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    onSuccess(
+                        SupportTickets(
+                            ticketId = doc.id,
+                            clientId = doc.getString("clientId") ?: "",
+                            adminId = doc.getString("adminId") ?: "",
+                            subject = doc.getString("subject") ?: "",
+                            message = doc.getString("message") ?: "",
+                            status = doc.getString("status") ?: "open"
+                        )
+                    )
+                } else onFailure("Ticket not found")
+            }
+            .addOnFailureListener { onFailure(it.message ?: "Failed to get ticket") }
     }
     fun testFullScenario() {
 
@@ -1013,11 +1080,18 @@ class FirebaseRepository(
                                                                 productId = "",
                                                                 name = "Crochet Bag",
                                                                 description = "Handmade tshirt yarn bag",
-                                                                price = 25.0,
                                                                 category = "bags",
                                                                 imageUrl = "https://test.com/image.jpg",
-                                                                stock = 10,
-                                                                isCustomizable = true
+                                                                isCustomizable = true,
+                                                                variants = listOf(
+                                                                    ProductVariant(
+                                                                        variantId = "",
+                                                                        size = "Medium",
+                                                                        color = "Beige",
+                                                                        stock = 10,
+                                                                        price = 25.0
+                                                                    )
+                                                                )
                                                             )
 
                                                             addProduct(

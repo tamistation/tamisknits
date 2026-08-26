@@ -3,16 +3,17 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
-    id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
+
+    kotlin("plugin.serialization")
 }
 
 android {
     namespace = "com.example.tamisknits"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.tamisknits"
@@ -48,6 +49,9 @@ android {
 }
 
 dependencies {
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0")
+    }
     implementation(platform("com.google.firebase:firebase-bom:34.14.1"))
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.firebase:firebase-analytics")
@@ -69,9 +73,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    implementation("com.google.dagger:hilt-android:2.58")
-    ksp("com.google.dagger:hilt-compiler:2.58")
-    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("com.google.dagger:hilt-android:2.57.1")
+    ksp(libs.hilt.compiler)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.5.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+
 }

@@ -28,8 +28,8 @@ class OrderManagementViewModel @Inject constructor(
     //this is private only read and write inside the class
     private val _uiState = MutableStateFlow(OrderManagementUiState())
     val uiState: StateFlow<OrderManagementUiState> = _uiState
-
     //this is public allowed to be read from outside class but stateflow doesnt allow write
+
     private val statusConfigFlow = useCase.getOrderStatusConfig()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), OrderStatusConfig())
 
@@ -38,12 +38,12 @@ class OrderManagementViewModel @Inject constructor(
     private val ordersFlow = useCase.getOrders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 //state in converts flow to stateflow,a streaam always having a cached value
-    //with 3 arguments (when to run,whent to start stop listening 9here 5s),initial value)
+    //with 3 arguments (when to run,whent to start stop listening here 5s),initial value)
 
 
     //combine is listening to multiple flows:
     // and whenever any of these flows change filtered orders runs again
-    //
+    //itt just reacts no manual refreshements
     val filteredOrders: StateFlow<List<Orders>> = combine(
         _uiState,
         ordersFlow,
@@ -64,7 +64,7 @@ class OrderManagementViewModel @Inject constructor(
         }
 
         if (state.searchQuery.isBlank()) typeFiltered //if its blank it will
-        //work like typefiltered
+        //work like  the typefiltered
         //if not :
         else typeFiltered.filter {
             it.orderId.take(8).contains(state.searchQuery, ignoreCase = true) ||
@@ -74,8 +74,15 @@ class OrderManagementViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    //executed after vm runs, collects new orders, keeps ui state updated(isloading to stop it from loading)
+    // always counts pending orders from the FULL list, regardless of which tab/filter is active
+    val pendingCount: StateFlow<Int> = combine(
+        ordersFlow,
+        statusConfigFlow
+    ) { orders, config ->
+        orders.count { it.status in config.pending }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    //executed after vm runs, collects new orders, keeps ui state updated(isloading to stop it from loading)
     init {
         viewModelScope.launch {
             ordersFlow.collect { orders ->
