@@ -1,3 +1,5 @@
+package com.example.tamisknits.repository
+
 import com.example.tamisknits.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
