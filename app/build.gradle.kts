@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.example.tamisknits"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.tamisknits"
@@ -51,9 +51,9 @@ android {
 
 dependencies {
     constraints {
-        implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0")
+        implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.1.0")
     }
-    implementation(platform("com.google.firebase:firebase-bom:34.14.1"))
+    implementation(platform(libs.firebase.bom))
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
@@ -79,8 +79,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.57.1")
     ksp(libs.hilt.compiler)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("io.coil-kt.coil3:coil-compose:3.5.0")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
 

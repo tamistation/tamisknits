@@ -86,12 +86,30 @@ class OrderManagementViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             ordersFlow.collect { orders ->
+
+                val calculatedTotals = mutableMapOf<String, Double>()
+
+                orders.forEach { order ->
+
+                    val items =
+                        useCase.getOrderItemsWithProductInfo(order.items)
+
+                    val pricing =
+                        useCase.calculatePricing(items)
+
+                    calculatedTotals[order.orderId] =
+                        pricing.total
+                }
+
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false
+                    isLoading = false,
+                    allOrders = orders,
+                    calculatedTotals = calculatedTotals
                 )
             }
         }
     }
+
 
     //get state of each
     fun onTabSelected(tab: OrderTab) {

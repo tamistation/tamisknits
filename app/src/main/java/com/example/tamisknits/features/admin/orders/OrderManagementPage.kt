@@ -3,6 +3,7 @@ package com.example.tamisknits.features.admin.orders
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,6 @@ import com.example.tamisknits.ui.components.PageHeader
 import com.example.tamisknits.ui.components.StatusPill
 import com.example.tamisknits.ui.components.TabsWithPendingBadge
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.clickable
 
 //removed colors and put them in a separate file
 //turned screen to page
@@ -185,6 +185,7 @@ private fun OrderManagementUI(// hol declarations to fill in data fo2 with types
 
                         OrderCard(
                             order = order,
+                            calculatedTotal = uiState.calculatedTotals[order.orderId] ?: 0.0,
                             isDragging = uiState.draggingOrderId == order.orderId,
                             statusFlow = statusFlow,
                             onDragStart = { onDragStart(order.orderId) },
@@ -298,6 +299,7 @@ fun OrderFilter.label(): String = when (this) {
 @Composable
 private fun OrderCard(
     order: Orders,
+    calculatedTotal: Double,
     isDragging: Boolean,
     statusFlow: List<String>,
     onDragStart: () -> Unit,
@@ -353,7 +355,11 @@ private fun OrderCard(
             ) {
                 LabelValue("Client", order.clientId.take(10))
                 LabelValue("Items", "${order.items.size}")
-                LabelValue("Total", "$${order.totalPrice}")
+                LabelValue(
+                    "Total",
+                    "$${"%.2f".format(calculatedTotal)}"
+                )
+
                 LabelValue("City", order.shippingAddress["city"] ?: "—")
             }
 

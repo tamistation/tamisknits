@@ -318,7 +318,6 @@ class FirebaseRepository(
             "name" to product.name,
             "description" to product.description,
             "category" to product.category,
-            "imageUrl" to product.imageUrl,
             "isCustomizable" to product.isCustomizable,
             "variants" to product.variants.map { variant ->
                 mapOf(
@@ -326,7 +325,8 @@ class FirebaseRepository(
                     "size" to variant.size,
                     "color" to variant.color,
                     "stock" to variant.stock,
-                    "price" to variant.price
+                    "price" to variant.price,
+                    "imageUrl" to variant.imageUrl
                 )
             },
             "createdAt" to FieldValue.serverTimestamp()
@@ -348,7 +348,6 @@ class FirebaseRepository(
                         name = doc.getString("name") ?: "",
                         description = doc.getString("description") ?: "",
                         category = doc.getString("category") ?: "",
-                        imageUrl = doc.getString("imageUrl") ?: "",
                         isCustomizable = doc.getBoolean("isCustomizable") ?: false,
                         variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
                             ProductVariant(
@@ -356,7 +355,8 @@ class FirebaseRepository(
                                 size = v["size"] as? String ?: "",
                                 color = v["color"] as? String ?: "",
                                 stock = (v["stock"] as? Long)?.toInt() ?: 0,
-                                price = v["price"] as? Double ?: 0.0
+                                price = v["price"] as? Double ?: 0.0,
+                                imageUrl = v["imageUrl"] as? String ?: ""
                             )
                         } ?: emptyList()
                     )
@@ -378,7 +378,6 @@ class FirebaseRepository(
                             name = doc.getString("name") ?: "",
                             description = doc.getString("description") ?: "",
                             category = doc.getString("category") ?: "",
-                            imageUrl = doc.getString("imageUrl") ?: "",
                             isCustomizable = doc.getBoolean("isCustomizable") ?: false,
                             variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
                                 ProductVariant(
@@ -386,7 +385,8 @@ class FirebaseRepository(
                                     size = v["size"] as? String ?: "",
                                     color = v["color"] as? String ?: "",
                                     stock = (v["stock"] as? Long)?.toInt() ?: 0,
-                                    price = v["price"] as? Double ?: 0.0
+                                    price = (v["price"] as? Number)?.toDouble() ?: 0.0,
+                                    imageUrl = v["imageUrl"] as? String ?: ""
                                 )
                             } ?: emptyList()
                         )
@@ -1081,7 +1081,7 @@ class FirebaseRepository(
                                                                 name = "Crochet Bag",
                                                                 description = "Handmade tshirt yarn bag",
                                                                 category = "bags",
-                                                                imageUrl = "https://test.com/image.jpg",
+
                                                                 isCustomizable = true,
                                                                 variants = listOf(
                                                                     ProductVariant(
@@ -1089,7 +1089,8 @@ class FirebaseRepository(
                                                                         size = "Medium",
                                                                         color = "Beige",
                                                                         stock = 10,
-                                                                        price = 25.0
+                                                                        price = 25.0,
+                                                                        imageUrl = "https://test.com/image.jpg",
                                                                     )
                                                                 )
                                                             )

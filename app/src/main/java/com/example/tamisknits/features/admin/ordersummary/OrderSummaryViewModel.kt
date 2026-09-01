@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @HiltViewModel
 class OrderSummaryViewModel @Inject constructor(
     private val useCase: OrderSummaryUseCase
@@ -32,7 +33,16 @@ class OrderSummaryViewModel @Inject constructor(
 
                     viewModelScope.launch {
                         val items = useCase.getOrderItemsWithProductInfo(order.items)
-                        _uiState.value = _uiState.value.copy(items = items, isLoading = false)
+                        val pricing = useCase.calculatePricing(items)
+                        _uiState.value = _uiState.value.copy(
+                            items = items,
+                            isLoading = false,
+                            subtotal = pricing.subtotal,
+                            deliveryFee = pricing.deliveryFee,
+                            discountPercentage = pricing.discountPercentage,
+                            discountAmount = pricing.discountAmount,
+                            total = pricing.total
+                        )
                     }
                 },
                 onFailure = { message ->
@@ -41,4 +51,6 @@ class OrderSummaryViewModel @Inject constructor(
             )
         }
     }
+
+
 }

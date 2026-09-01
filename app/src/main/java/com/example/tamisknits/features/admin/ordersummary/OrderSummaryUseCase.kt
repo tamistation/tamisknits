@@ -1,6 +1,8 @@
 package com.example.tamisknits.features.admin.ordersummary
 
+import com.example.tamisknits.features.pricing.PricingUseCase
 import com.example.tamisknits.models.OrderItem
+import com.example.tamisknits.models.OrderPricing
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.repository.FirebaseRepository
@@ -11,7 +13,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 
 class OrderSummaryUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: FirebaseRepository,
+    private val pricingUseCase: PricingUseCase
 ) {
 
     fun getOrderById(
@@ -43,21 +46,35 @@ class OrderSummaryUseCase @Inject constructor(
         items.map { item ->
             async {
                 val productId = item["productId"] as? String ?: ""
-                val quantity = (item["quantity"] as? Long)?.toInt() ?: 0
+                val variantId = item["variantId"] as? String ?: ""
+                val quantity = (item["quantity"] as? Number)?.toInt() ?: 0
+
 
                 val product = getProductSuspend(productId)
-                val firstVariant = product?.variants?.firstOrNull()
+                val variant = product?.variants?.find { it.variantId == variantId }
 
                 OrderItem(
                     productId = productId,
+                    variantId = variantId,
                     quantity = quantity,
                     name = product?.name ?: "Unknown product",
-                    imageUrl = product?.imageUrl ?: "",
-                    size = firstVariant?.size ?: "",
-                    color = firstVariant?.color ?: "",
-                    price = firstVariant?.price ?: 0.0
+                    imageUrl = variant?.imageUrl ?: "",
+                    size = variant?.size ?: "",
+                    color = variant?.color ?: "",
+                    price = variant?.price ?: 0.0
                 )
             }
         }.awaitAll()
     }
+
+    fun calculatePricing(
+        items: List<OrderItem>,
+        discountPercentage: Double = 0.0
+    ): OrderPricing {
+        return pricingUseCase.calculatePricing(
+            items,
+            discountPercentage
+        )
+    }
+
 }

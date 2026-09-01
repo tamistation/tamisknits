@@ -2,6 +2,7 @@ package com.example.tamisknits.models
 
 data class OrderItem(
     val productId: String = "",
+    val variantId: String = "",
     val quantity: Int = 0,
     val name: String = "",
     val imageUrl: String = "",

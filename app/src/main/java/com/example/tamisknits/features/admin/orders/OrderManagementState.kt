@@ -6,6 +6,7 @@ import com.example.tamisknits.models.Orders
 data class OrderManagementUiState(
     val isLoading: Boolean = true,
     val allOrders: List<Orders> = emptyList(),
+    val calculatedTotals: Map<String, Double> = emptyMap(),
     val selectedTab: OrderTab = OrderTab.PENDING,
     val searchQuery: String = "",
     val selectedFilter: OrderFilter = OrderFilter.ALL,

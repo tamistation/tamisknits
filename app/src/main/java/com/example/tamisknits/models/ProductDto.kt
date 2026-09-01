@@ -7,6 +7,7 @@ data class ProductVariant(
     val size: String = "",
     val color: String = "",
     val stock: Int = 0,
+    val imageUrl: String = "",
     val price: Double = 0.0
 )
 
@@ -15,7 +16,6 @@ data class Products(
     val name: String = "",
     val description: String = "",
     val category: String = "",
-    val imageUrl: String = "",
     val isCustomizable: Boolean = false,
     val variants: List<ProductVariant> = emptyList()
 )

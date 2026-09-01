@@ -1,6 +1,7 @@
 package com.example.tamisknits.features.admin.ordersummary
 
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,9 +37,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import coil.compose.AsyncImage
 import com.example.tamisknits.models.OrderItem
-import com.example.tamisknits.models.Orders
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.ui.components.PageHeader
 import com.example.tamisknits.ui.components.StatusPill
@@ -104,17 +104,15 @@ private fun OrderSummaryUI(
                         Text(uiState.errorMessage, color = AppColors.TextMuted, fontSize = 15.sp)
                     }
                 }
-
                 uiState.order != null -> {
-                    OrderSummaryContent(order = uiState.order, items = uiState.items)
+                    OrderSummaryContent(uiState = uiState)
                 }
             }
         }
     }
 }
-
 @Composable
-private fun OrderSummaryContent(order: Orders, items: List<OrderItem>) {
+private fun OrderSummaryContent(uiState: OrderSummaryState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -137,19 +135,19 @@ private fun OrderSummaryContent(order: Orders, items: List<OrderItem>) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Order #${order.orderId.take(8).uppercase()}",
+                            text = "Order #${uiState.order!!.orderId.take(8).uppercase()}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = AppColors.TextDark
                         )
-                        val (label, color) = summaryStatusPillStyle(order.status)
+                        val (label, color) = summaryStatusPillStyle(uiState.order!!.status)
                         StatusPill(label = label, color = color)
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = if (order.isCustomOrder) "✦ Custom order" else "Standard order",
+                        text = if (uiState.order!!.isCustomOrder) "✦ Custom order" else "Standard order",
                         fontSize = 13.sp,
-                        color = if (order.isCustomOrder) AppColors.Terracotta else AppColors.TextMuted
+                        color = if (uiState.order!!.isCustomOrder) AppColors.Terracotta else AppColors.TextMuted
                     )
                 }
             }
@@ -163,36 +161,43 @@ private fun OrderSummaryContent(order: Orders, items: List<OrderItem>) {
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    SummaryRow("Client", order.clientId)
+                    SummaryRow("Client", uiState.order!!.clientId)
                     HorizontalDivider(
                         Modifier.padding(vertical = 8.dp),
                         color = AppColors.DividerLightTwo
                     )
-                    SummaryRow("Total", "$${order.totalPrice}")
+                    SummaryRow("Total", "$${"%.2f".format(uiState.total)}")
                     HorizontalDivider(
                         Modifier.padding(vertical = 8.dp),
                         color = AppColors.DividerLightTwo
                     )
-                    SummaryRow("City", order.shippingAddress["city"] ?: "—")
+                    SummaryRow("City", uiState.order!!.shippingAddress["city"] ?: "—")
                 }
             }
         }
 
         item {
             Text(
-                "Items (${items.size})",
+                "Items (${uiState.items.size})",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 color = AppColors.TextDark
             )
         }
 
-        items(items) { orderItem ->
+        items(uiState.items) { orderItem ->
             OrderItemRow(orderItem)
         }
 
+
         item {
-            OrderBreakdownCard(items = items, totalPrice = order.totalPrice)
+            OrderBreakdownCard(
+                subtotal = uiState.subtotal,
+                deliveryFee = uiState.deliveryFee,
+                discountPercentage = uiState.discountPercentage,
+                discountAmount = uiState.discountAmount,
+                total = uiState.total
+            )
         }
 
         item { Spacer(Modifier.height(16.dp)) }
@@ -200,11 +205,13 @@ private fun OrderSummaryContent(order: Orders, items: List<OrderItem>) {
 }
 
 @Composable
-private fun OrderBreakdownCard(items: List<OrderItem>, totalPrice: Double) {
-    val subtotal = items.sumOf { it.price * it.quantity }
-    val discountPercentage = 0.0 // placeholder — no discount source wired up yet
-    val discountAmount = subtotal * (discountPercentage / 100.0)
-
+private fun OrderBreakdownCard(
+    subtotal: Double,
+    deliveryFee: Double,
+    discountPercentage: Double,
+    discountAmount: Double,
+    total: Double
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -213,6 +220,8 @@ private fun OrderBreakdownCard(items: List<OrderItem>, totalPrice: Double) {
     ) {
         Column(Modifier.padding(16.dp)) {
             SummaryRow("Subtotal", "$${"%.2f".format(subtotal)}")
+            Spacer(Modifier.height(8.dp))
+            SummaryRow("Delivery fee", "$${"%.2f".format(deliveryFee)}")
             Spacer(Modifier.height(8.dp))
             SummaryRow(
                 "Discount (${discountPercentage.toInt()}%)",
@@ -232,7 +241,7 @@ private fun OrderBreakdownCard(items: List<OrderItem>, totalPrice: Double) {
                     color = AppColors.TextDark
                 )
                 Text(
-                    "$${"%.2f".format(totalPrice)}",
+                    "$${"%.2f".format(total)}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = AppColors.Terracotta
