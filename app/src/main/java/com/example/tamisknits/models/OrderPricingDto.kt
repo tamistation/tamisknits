@@ -1,6 +1,6 @@
 package com.example.tamisknits.models
 
-data class OrderPricing(
+data class OrderPricingDto(
     val subtotal: Double,
     val deliveryFee: Double,
     val discountPercentage: Double,

@@ -1,7 +1,7 @@
 package com.example.tamisknits.features.pricing
 
 import com.example.tamisknits.models.OrderItem
-import com.example.tamisknits.models.OrderPricing
+import com.example.tamisknits.models.OrderPricingDto
 import javax.inject.Inject
 
 class PricingUseCase @Inject constructor() {
@@ -13,7 +13,7 @@ class PricingUseCase @Inject constructor() {
     fun calculatePricing(
         items: List<OrderItem>,
         discountPercentage: Double = 0.0
-    ): OrderPricing {
+    ): OrderPricingDto {
 
         val subtotal = items.sumOf { item ->
             item.price * item.quantity
@@ -25,7 +25,7 @@ class PricingUseCase @Inject constructor() {
         val total =
             subtotal + DELIVERY_FEE - discountAmount
 
-        return OrderPricing(
+        return OrderPricingDto(
             subtotal = subtotal,
             deliveryFee = DELIVERY_FEE,
             discountPercentage = discountPercentage,

@@ -2,6 +2,7 @@ package com.example.tamisknits.features.admin
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ private data class AdminNavItem(
 
 private val adminNavItems = listOf(
     AdminNavItem(AdminRoute.Orders, Icons.Default.ListAlt, "Orders"),
+    AdminNavItem(AdminRoute.Products, Icons.Default.Inventory2, "Products"),
     AdminNavItem(AdminRoute.Support, Icons.Default.Headset, "Support"),
     AdminNavItem(AdminRoute.Settings, Icons.Default.Settings, "Settings"),
 )

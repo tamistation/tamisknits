@@ -29,6 +29,7 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
     val backStackEntry by innerNavController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.currentAdminRoute
     val isTopLevel = currentRoute is AdminRoute.Orders ||
+            currentRoute is AdminRoute.Products ||
             currentRoute is AdminRoute.Support ||
             currentRoute is AdminRoute.Settings
 
@@ -50,7 +51,9 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
             }
         },
     ) { innerPadding ->
-        Box(Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             NavHost(
                 navController = innerNavController,
                 startDestination = AdminRoute.Orders,

@@ -14,6 +14,9 @@ sealed interface AdminRoute {
     data object Support : AdminRoute
     @Serializable
     data object Settings : AdminRoute
+
+    @Serializable
+    data object Products : AdminRoute
     @Serializable
     data class TicketChat(val ticketId: String) : AdminRoute
 
@@ -25,6 +28,7 @@ val NavBackStackEntry.currentAdminRoute: AdminRoute?
     @SuppressLint("RestrictedApi")
     get() = when {
         destination.hasRoute<AdminRoute.Orders>() -> toRoute<AdminRoute.Orders>()
+        destination.hasRoute<AdminRoute.Products>() -> toRoute<AdminRoute.Products>()
         destination.hasRoute<AdminRoute.Support>() -> toRoute<AdminRoute.Support>()
         destination.hasRoute<AdminRoute.Settings>() -> toRoute<AdminRoute.Settings>()
         destination.hasRoute<AdminRoute.TicketChat>() -> toRoute<AdminRoute.TicketChat>()

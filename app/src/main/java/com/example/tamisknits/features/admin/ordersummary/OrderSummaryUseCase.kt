@@ -2,7 +2,6 @@ package com.example.tamisknits.features.admin.ordersummary
 
 import com.example.tamisknits.features.pricing.PricingUseCase
 import com.example.tamisknits.models.OrderItem
-import com.example.tamisknits.models.OrderPricing
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.repository.FirebaseRepository
@@ -70,7 +69,7 @@ class OrderSummaryUseCase @Inject constructor(
     fun calculatePricing(
         items: List<OrderItem>,
         discountPercentage: Double = 0.0
-    ): OrderPricing {
+    ): OrderPricingDto {
         return pricingUseCase.calculatePricing(
             items,
             discountPercentage

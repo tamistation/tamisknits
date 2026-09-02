@@ -84,6 +84,7 @@ fun AppNavHost(
             )
         }
 
+
         composable<AppRoute.ClientHome> {
             ClientHomePage()
         }
