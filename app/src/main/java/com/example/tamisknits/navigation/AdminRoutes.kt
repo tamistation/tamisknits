@@ -19,9 +19,14 @@ sealed interface AdminRoute {
     data object Products : AdminRoute
     @Serializable
     data class TicketChat(val ticketId: String) : AdminRoute
-
     @Serializable
     data class OrderSummary(val orderId: String) : AdminRoute
+
+    @Serializable
+    data object AddProduct : AdminRoute
+
+    @Serializable
+    data class EditProduct(val productId: String) : AdminRoute
 }
 
 val NavBackStackEntry.currentAdminRoute: AdminRoute?
@@ -29,6 +34,8 @@ val NavBackStackEntry.currentAdminRoute: AdminRoute?
     get() = when {
         destination.hasRoute<AdminRoute.Orders>() -> toRoute<AdminRoute.Orders>()
         destination.hasRoute<AdminRoute.Products>() -> toRoute<AdminRoute.Products>()
+        destination.hasRoute<AdminRoute.AddProduct>() -> toRoute<AdminRoute.AddProduct>()
+        destination.hasRoute<AdminRoute.EditProduct>() -> toRoute<AdminRoute.EditProduct>()
         destination.hasRoute<AdminRoute.Support>() -> toRoute<AdminRoute.Support>()
         destination.hasRoute<AdminRoute.Settings>() -> toRoute<AdminRoute.Settings>()
         destination.hasRoute<AdminRoute.TicketChat>() -> toRoute<AdminRoute.TicketChat>()
