@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.productmanagement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +23,7 @@ class ProductManagementViewModel @Inject constructor(
     private val productsFlow = useCase.getProducts()
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
+            SharingStarted.Companion.WhileSubscribed(5000),
             emptyList()
         )
 
@@ -57,7 +57,7 @@ class ProductManagementViewModel @Inject constructor(
 
     }.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
+        SharingStarted.Companion.WhileSubscribed(5000),
         emptyList()
     )
 

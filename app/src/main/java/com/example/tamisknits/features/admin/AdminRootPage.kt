@@ -16,8 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.tamisknits.features.admin.orders.OrderManagementPage
 import com.example.tamisknits.features.admin.ordersummary.OrderSummaryPage
-import com.example.tamisknits.features.admin.products.AddProductPage
-import com.example.tamisknits.features.admin.products.ProductManagementPage
+import com.example.tamisknits.features.admin.products.add.AddProductPage
+import com.example.tamisknits.features.admin.products.edit.EditProductPage
+import com.example.tamisknits.features.admin.products.productmanagement.ProductManagementPage
 import com.example.tamisknits.features.admin.settings.SettingsPage
 import com.example.tamisknits.features.admin.support.chat.TicketChatPage
 import com.example.tamisknits.features.admin.support.list.SupportPage
@@ -98,6 +99,20 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                     )
                 }
 
+                composable<AdminRoute.EditProduct> { backStackEntry ->
+                    val route = backStackEntry.toRoute<AdminRoute.EditProduct>()
+
+                    EditProductPage(
+                        productId = route.productId,
+                        viewModel = hiltViewModel(),
+                        onProductUpdated = {
+                            innerNavController.popBackStack()
+                        },
+                        onBackClick = {
+                            innerNavController.popBackStack()
+                        }
+                    )
+                }
 
                 composable<AdminRoute.OrderSummary> { backStackEntry ->
                     val route = backStackEntry.toRoute<AdminRoute.OrderSummary>()

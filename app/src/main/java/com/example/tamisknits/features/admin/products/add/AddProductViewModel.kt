@@ -1,6 +1,7 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.add
 
 import androidx.lifecycle.ViewModel
+import com.example.tamisknits.features.admin.products.productmanagement.ProductManagementUseCase
 import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.models.Products
 import dagger.hilt.android.lifecycle.HiltViewModel

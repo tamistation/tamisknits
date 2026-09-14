@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.productmanagement
 
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.repository.FirebaseRepository
@@ -8,9 +8,21 @@ import javax.inject.Inject
 class ProductManagementUseCase @Inject constructor(
     private val repository: FirebaseRepository
 ) {
-
     fun getProducts(): Flow<List<Products>> =
         repository.getProducts()
+
+    fun getProduct(
+        productId: String,
+        onSuccess: (Products) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        repository.getProduct(
+            productId,
+            onSuccess,
+            onFailure
+        )
+    }
+
 
     fun addProduct(
         product: Products,

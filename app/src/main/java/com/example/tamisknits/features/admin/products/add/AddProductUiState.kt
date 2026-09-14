@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.add
 
 import com.example.tamisknits.models.ProductVariant
 import java.util.UUID

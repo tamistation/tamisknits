@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.productmanagement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

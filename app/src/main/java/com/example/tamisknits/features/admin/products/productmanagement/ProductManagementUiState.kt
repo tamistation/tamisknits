@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin.products
+package com.example.tamisknits.features.admin.products.productmanagement
 
 import com.example.tamisknits.models.Products
 
