@@ -99,9 +99,9 @@ class AddProductViewModel @Inject constructor(
             description = state.description.trim(),
             category = state.category,
             isCustomizable = state.isCustomizable,
+            imageUrl = state.imageUri ?: "",
             variants = state.variants
         )
-
         useCase.addProduct(
             product = product,
             onSuccess = {

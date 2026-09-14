@@ -17,6 +17,7 @@ data class Products(
     val description: String = "",
     val category: String = "",
     val isCustomizable: Boolean = false,
+    val imageUrl: String = "",
     val variants: List<ProductVariant> = emptyList()
 )
 

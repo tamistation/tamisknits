@@ -1,9 +1,11 @@
 package com.example.tamisknits.features.admin.products
 
+import android.content.ContentValues
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,8 +70,8 @@ fun AddProductPage(
         onNameChange = viewModel::onNameChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onCategoryChange = viewModel::onCategoryChange,
-        onImageSelected = viewModel::onImageSelected,
         onCustomizableChange = viewModel::onCustomizableChange,
+        onImageSelected = viewModel::onImageSelected,
         onAddVariant = viewModel::addVariant,
         onRemoveVariant = viewModel::removeVariant,
         onUpdateVariant = viewModel::updateVariant,
@@ -87,8 +90,8 @@ fun AddProductUI(
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
-    onImageSelected: (String?) -> Unit,
     onCustomizableChange: (Boolean) -> Unit,
+    onImageSelected: (String?) -> Unit,
     onAddVariant: () -> Unit,
     onRemoveVariant: (Int) -> Unit,
     onUpdateVariant: (Int, ProductVariant) -> Unit,
@@ -353,76 +356,7 @@ private fun CategoryDropdown(
     }
 }
 
-@Composable
-private fun ImagePicker(
-    imageUri: String?,
-    onImageSelected: (String?) -> Unit
-) {
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-
-        onImageSelected(uri?.toString())
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = AppColors.DragBackground
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-
-            if (imageUri != null) {
-
-                AsyncImage(
-                    model = imageUri,
-                    contentDescription = "Product image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-            } else {
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    Icon(
-                        imageVector = Icons.Default.Image,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = AppColors.TextMuted
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Product image",
-                        color = AppColors.TextMuted
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = {
-                            imagePickerLauncher.launch("image/*")
-                        }
-                    ) {
-                        Text("Choose Image")
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun VariantCard(
@@ -538,6 +472,140 @@ private fun VariantCard(
                 label = { Text("Price") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ImagePicker(
+                imageUri = variant.imageUrl,
+                onImageSelected = { imageUri ->
+                    onVariantChange(
+                        variant.copy(
+                            imageUrl = imageUri ?: ""
+                        )
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ImagePicker(
+    imageUri: String?,
+    onImageSelected: (String?) -> Unit
+) {
+    val context = LocalContext.current
+
+    var cameraUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+
+        if (uri != null) {
+            onImageSelected(uri.toString())
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+
+        if (success && cameraUri != null) {
+            onImageSelected(cameraUri.toString())
+        } else if (!success && cameraUri != null) {
+            context.contentResolver.delete(
+                cameraUri!!,
+                null,
+                null
+            )
+        }
+
+        cameraUri = null
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            Button(
+                onClick = {
+                    galleryLauncher.launch("image/*")
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = if (imageUri.isNullOrEmpty()) {
+                        "Gallery"
+                    } else {
+                        "Change"
+                    }
+                )
+            }
+
+            Button(
+                onClick = {
+
+                    val values = ContentValues().apply {
+                        put(
+                            MediaStore.Images.Media.DISPLAY_NAME,
+                            "image_${System.currentTimeMillis()}.jpg"
+                        )
+
+                        put(
+                            MediaStore.Images.Media.MIME_TYPE,
+                            "image/jpeg"
+                        )
+                    }
+
+                    val uri = context.contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        values
+                    )
+
+                    if (uri != null) {
+                        cameraUri = uri
+                        cameraLauncher.launch(uri)
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text("Camera")
+            }
+        }
+
+        if (!imageUri.isNullOrEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AsyncImage(
+                model = imageUri,
+                contentDescription = "Selected image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp),
+                contentScale = ContentScale.Crop
             )
         }
     }

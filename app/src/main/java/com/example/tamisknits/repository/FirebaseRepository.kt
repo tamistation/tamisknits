@@ -319,6 +319,7 @@ class FirebaseRepository(
             "description" to product.description,
             "category" to product.category,
             "isCustomizable" to product.isCustomizable,
+            "imageUrl" to product.imageUrl,
             "variants" to product.variants.map { variant ->
                 mapOf(
                     "variantId" to variant.variantId,
@@ -349,13 +350,14 @@ class FirebaseRepository(
                         description = doc.getString("description") ?: "",
                         category = doc.getString("category") ?: "",
                         isCustomizable = doc.getBoolean("isCustomizable") ?: false,
+                        imageUrl = doc.getString("imageUrl") ?: "",
                         variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
                             ProductVariant(
                                 variantId = v["variantId"] as? String ?: "",
                                 size = v["size"] as? String ?: "",
                                 color = v["color"] as? String ?: "",
                                 stock = (v["stock"] as? Long)?.toInt() ?: 0,
-                                price = v["price"] as? Double ?: 0.0,
+                                price = (v["price"] as? Number)?.toDouble() ?: 0.0,
                                 imageUrl = v["imageUrl"] as? String ?: ""
                             )
                         } ?: emptyList()
@@ -379,6 +381,7 @@ class FirebaseRepository(
                             description = doc.getString("description") ?: "",
                             category = doc.getString("category") ?: "",
                             isCustomizable = doc.getBoolean("isCustomizable") ?: false,
+                            imageUrl = doc.getString("imageUrl") ?: "",
                             variants = (doc.get("variants") as? List<Map<String, Any>>)?.map { v ->
                                 ProductVariant(
                                     variantId = v["variantId"] as? String ?: "",
