@@ -1,10 +1,8 @@
 package com.example.tamisknits.features.authentication.register
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -26,14 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -49,13 +44,6 @@ import com.example.tamisknits.ui.Loader
 import com.example.tamisknits.ui.PasswordToggle
 
 
-private data class RoleOption(val id: String, val label: String, val color: Color)
-
-private val roleOptions = listOf(
-    RoleOption("client", "Client", AppColors.Terracotta),
-    RoleOption("delivery", "Delivery Partner", AppColors.Terracotta),
-)
-
 @Composable
 fun RegisterPage(
     viewModel: RegisterViewModel,
@@ -67,8 +55,8 @@ fun RegisterPage(
     RegisterUI(
         isRegistering = registerState.isRegistering,
         registerError = registerState.registerError,
-        onRegisterClick = { name, email, phone, password, userType ->
-            viewModel.register(name, email, phone, password, userType)
+        onRegisterClick = { name, email, phone, password ->
+            viewModel.register(name, email, phone, password)
         },
         onLoginClick = onRedirectToLogin,
         onConsumeRegisterError = viewModel::consumeRegisterState,
@@ -86,7 +74,7 @@ fun RegisterPage(
 private fun RegisterUI(
     isRegistering: Boolean,
     registerError: String?,
-    onRegisterClick: (name: String, email: String, phone: String, password: String, userType: String) -> Unit,
+    onRegisterClick: (name: String, email: String, phone: String, password: String) -> Unit,
     onLoginClick: () -> Unit,
     onConsumeRegisterError: () -> Unit,
 ) {
@@ -133,7 +121,7 @@ private fun RegisterUI(
             ) {
                 RegisterFields(
                     isRegistering = isRegistering,
-                    onRegister = { name, email, phone, password, confirmPassword, userType ->
+                    onRegister = { name, email, phone, password, confirmPassword ->
                         when {
                             name.isEmpty() -> missingError = "Name is required"
                             email.isEmpty() -> missingError = "Email is required"
@@ -143,7 +131,7 @@ private fun RegisterUI(
                                 "Password must be at least 6 characters"
 
                             password != confirmPassword -> missingError = "Passwords do not match"
-                            else -> onRegisterClick(name, email, phone, password, userType)
+                            else -> onRegisterClick(name, email, phone, password)
                         }
                     },
                     onLogin = onLoginClick,
@@ -176,7 +164,6 @@ private fun RegisterFields(
         phone: String,
         password: String,
         confirmPassword: String,
-        userType: String,
     ) -> Unit,
     onLogin: () -> Unit,
 ) {
@@ -187,14 +174,9 @@ private fun RegisterFields(
     var confirmPassword: String by remember { mutableStateOf("") }
     var isPasswordMasked: Boolean by remember { mutableStateOf(true) }
     var isConfirmPasswordMasked: Boolean by remember { mutableStateOf(true) }
-    var selectedRoleIndex: Int by remember { mutableIntStateOf(0) }
 
     Column {
         Spacer(Modifier.height(8.dp))
-        RoleSelector(
-            selectedIndex = selectedRoleIndex,
-            onSelect = { selectedRoleIndex = it },
-        )
 
         Spacer(Modifier.height(20.dp))
 
@@ -251,8 +233,7 @@ private fun RegisterFields(
                     email,
                     phone,
                     password,
-                    confirmPassword,
-                    roleOptions[selectedRoleIndex].id
+                    confirmPassword
                 )
             },
             enabled = !isRegistering,
@@ -261,7 +242,7 @@ private fun RegisterFields(
                 .height(52.dp),
             shape = RoundedCornerShape(26.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = roleOptions[selectedRoleIndex].color,
+                containerColor = AppColors.Terracotta,
                 contentColor = AppColors.Surface,
             ),
         ) {
@@ -283,34 +264,3 @@ private fun RegisterFields(
 }
 
 //add pass,encrypted,doesnt return to the user,and is used in login
-@Composable
-private fun RoleSelector(
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(AppColors.Blush.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
-            .padding(4.dp),
-    ) {
-        roleOptions.forEachIndexed { index, role ->
-            val selected = index == selectedIndex
-            Box(
-                Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(if (selected) role.color else Color.Transparent)
-                    .clickable { onSelect(index) }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    role.label,
-                    style = AppType.Label,
-                    color = if (selected) AppColors.Surface else AppColors.Terracotta,
-                )
-            }
-        }
-    }
-}

@@ -21,11 +21,12 @@ class RegisterViewModel @Inject constructor(
         email: String,
         phone: String,
         password: String,
-        userTypeName: String,
     ) {
-
         viewModelScope.launch {
-            _state.value = _state.value.copy(isRegistering = true)
+            _state.value = _state.value.copy(
+                isRegistering = true
+            )
+
             runCatching {
                 registerUseCase.execute(
                     RegisterUseCase.Params(
@@ -33,7 +34,6 @@ class RegisterViewModel @Inject constructor(
                         email = email,
                         phone = phone,
                         password = password,
-                        userTypeName = userTypeName,
                     )
                 )
             }.fold(
@@ -46,7 +46,8 @@ class RegisterViewModel @Inject constructor(
                 onFailure = { error ->
                     _state.value = _state.value.copy(
                         isRegistering = false,
-                        registerError = error.message ?: "Registration failed. Please try again.",
+                        registerError = error.message
+                            ?: "Registration failed. Please try again.",
                     )
                 }
             )
