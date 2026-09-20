@@ -22,6 +22,8 @@ import com.example.tamisknits.features.admin.products.productmanagement.ProductM
 import com.example.tamisknits.features.admin.settings.SettingsPage
 import com.example.tamisknits.features.admin.support.chat.TicketChatPage
 import com.example.tamisknits.features.admin.support.list.SupportPage
+import com.example.tamisknits.features.admin.userManagement.UserManagementPage
+import com.example.tamisknits.features.admin.userManagement.details.UserDetailsPage
 import com.example.tamisknits.navigation.AdminRoute
 import com.example.tamisknits.navigation.currentAdminRoute
 
@@ -143,8 +145,44 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                 }
 
                 composable<AdminRoute.Settings> {
-                    SettingsPage(onLoggedOut = onLoggedOut)
+                    SettingsPage(
+                        onUserManagementClick = {
+                            innerNavController.navigate(
+                                AdminRoute.UserManagement
+                            )
+                        },
+                        onLoggedOut = onLoggedOut
+                    )
                 }
+                composable<AdminRoute.UserManagement> {
+                    UserManagementPage(
+                        viewModel = hiltViewModel(),
+                        onUserClick = { uid ->
+                            innerNavController.navigate(
+                                AdminRoute.UserDetails(uid)
+                            )
+                        },
+                        onBackClick = {
+                            innerNavController.popBackStack()
+                        }
+                    )
+                }
+
+                composable<AdminRoute.UserDetails> { backStackEntry ->
+                    val route = backStackEntry.toRoute<AdminRoute.UserDetails>()
+
+                    UserDetailsPage(
+                        uid = route.uid,
+                        viewModel = hiltViewModel(),
+                        onBackClick = {
+                            innerNavController.popBackStack()
+                        },
+                        onDeleteSuccess = {
+                            innerNavController.popBackStack()
+                        }
+                    )
+                }
+
             }
         }
     }

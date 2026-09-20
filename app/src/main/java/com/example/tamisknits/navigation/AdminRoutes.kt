@@ -27,6 +27,12 @@ sealed interface AdminRoute {
 
     @Serializable
     data class EditProduct(val productId: String) : AdminRoute
+
+    @Serializable
+    data object UserManagement : AdminRoute
+
+    @Serializable
+    data class UserDetails(val uid: String) : AdminRoute
 }
 
 val NavBackStackEntry.currentAdminRoute: AdminRoute?
@@ -40,5 +46,7 @@ val NavBackStackEntry.currentAdminRoute: AdminRoute?
         destination.hasRoute<AdminRoute.Settings>() -> toRoute<AdminRoute.Settings>()
         destination.hasRoute<AdminRoute.TicketChat>() -> toRoute<AdminRoute.TicketChat>()
         destination.hasRoute<AdminRoute.OrderSummary>() -> toRoute<AdminRoute.OrderSummary>()
+        destination.hasRoute<AdminRoute.UserManagement>() -> toRoute<AdminRoute.UserManagement>()
+        destination.hasRoute<AdminRoute.UserDetails>() -> toRoute<AdminRoute.UserDetails>()
         else -> null
     }

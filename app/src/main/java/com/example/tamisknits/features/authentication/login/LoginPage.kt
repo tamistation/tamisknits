@@ -13,11 +13,18 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -61,7 +68,7 @@ fun LoginPage(
     LaunchedEffect(loginState.loggedInUser) {
         loginState.loggedInUser?.let { user ->
             onLoginSuccess(user)
-            viewModel.consumeLoginState()//this ensures the navigations only happens once the moment login is confirmed
+            viewModel.consumeLoginState() // ensures navigation only fires once, right when login is confirmed
         }
     }
 }
@@ -74,8 +81,6 @@ private fun LoginUI(
     onRegisterClick: () -> Unit,
     onConsumeLoginError: () -> Unit,
 ) {
-    var missingError: String? by remember { mutableStateOf(null) }
-
     Box(
         Modifier
             .fillMaxSize()
@@ -112,19 +117,12 @@ private fun LoginUI(
                         RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
                     )
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
             ) {
                 LoginFields(
                     isLoggingIn = isLoggingIn,
-                    onLogin = { email, password ->
-                        if (email.isEmpty()) {
-                            missingError = "Email is required"
-                        } else if (password.isEmpty()) {
-                            missingError = "Password is required"
-                        } else {
-                            onLoginClick(email, password)
-                        }
-                    },
+                    onLogin = onLoginClick,
                     onRegister = onRegisterClick,
                 )
             }
@@ -137,10 +135,9 @@ private fun LoginUI(
         }
     }
 
-    missingError?.let {
-        AuthDialog(onDismiss = { missingError = null }, message = it)
-    }
-
+    // Field-level problems (empty email, empty password) are shown inline in LoginFields.
+    // This dialog is reserved for real failures the person can't fix by editing a field —
+    // wrong credentials, network errors, server issues.
     loginError?.let { error ->
         AuthDialog(onDismiss = onConsumeLoginError, message = error)
     }
@@ -174,21 +171,31 @@ private fun LoginFields(
     var pass: String by remember { mutableStateOf("") }
     var isPasswordMasked: Boolean by remember { mutableStateOf(true) }
 
+    var emailError: String? by remember { mutableStateOf(null) }
+    var passwordError: String? by remember { mutableStateOf(null) }
+
     Column {
         AuthTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it; emailError = null },
             label = "Email",
             keyboardType = KeyboardType.Email,
+            leadingIcon = {
+                Icon(Icons.Outlined.Email, contentDescription = null, tint = AppColors.TextMuted)
+            },
+            errorText = emailError,
         )
 
         Spacer(Modifier.height(16.dp))
 
         AuthTextField(
             value = pass,
-            onValueChange = { pass = it },
+            onValueChange = { pass = it; passwordError = null },
             label = "Password",
             keyboardType = KeyboardType.Password,
+            leadingIcon = {
+                Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppColors.TextMuted)
+            },
             trailingIcon = {
                 PasswordToggle(
                     isPasswordMasked,
@@ -196,12 +203,20 @@ private fun LoginFields(
                 )
             },
             visualTransformation = if (isPasswordMasked) PasswordVisualTransformation() else VisualTransformation.None,
+            errorText = passwordError,
         )
 
         Spacer(Modifier.height(28.dp))
 
         Button(
-            onClick = { onLogin(email, pass) },
+            onClick = {
+                emailError = if (email.isBlank()) "Enter your email" else null
+                passwordError = if (pass.isBlank()) "Enter your password" else null
+
+                if (emailError == null && passwordError == null) {
+                    onLogin(email, pass)
+                }
+            },
             enabled = !isLoggingIn,
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,8 +245,10 @@ internal fun AuthTextField(
     label: String,
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
+    leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    errorText: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -240,18 +257,25 @@ internal fun AuthTextField(
         label = { Text(label, style = AppType.Label) },
         textStyle = AppType.Body.copy(color = AppColors.TextDark),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         visualTransformation = visualTransformation,
         singleLine = true,
+        isError = errorText != null,
+        supportingText = errorText?.let { msg ->
+            { Text(msg, style = AppType.Label, color = AppColors.ErrorRed) }
+        },
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = AppColors.Terracotta,
             unfocusedBorderColor = AppColors.Outline,
+            errorBorderColor = AppColors.ErrorRed,
             focusedContainerColor = AppColors.Surface,
             unfocusedContainerColor = AppColors.Blush.copy(alpha = 0.5f),
             cursorColor = AppColors.Terracotta,
             focusedLabelColor = AppColors.Terracotta,
             unfocusedLabelColor = AppColors.TextMuted,
+            errorLabelColor = AppColors.ErrorRed,
         ),
     )
 }
@@ -260,12 +284,22 @@ internal fun AuthTextField(
 internal fun AuthDialog(onDismiss: () -> Unit, message: String) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = AppColors.ErrorRed,
+            )
+        },
+        title = {
+            Text("Something went wrong", style = AppType.Label, color = AppColors.TextDark)
+        },
+        text = { Text(message, style = AppType.Body, color = AppColors.TextMuted) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = AppColors.Terracotta)
+                Text("Got it", color = AppColors.Terracotta)
             }
         },
-        text = { Text(message, style = AppType.Body) },
         containerColor = AppColors.Surface,
         shape = RoundedCornerShape(20.dp),
     )

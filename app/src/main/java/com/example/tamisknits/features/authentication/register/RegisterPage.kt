@@ -16,8 +16,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,7 +48,6 @@ import com.example.tamisknits.theme.AppType
 import com.example.tamisknits.ui.AuthenticationDivider
 import com.example.tamisknits.ui.Loader
 import com.example.tamisknits.ui.PasswordToggle
-
 
 @Composable
 fun RegisterPage(
@@ -78,8 +83,6 @@ private fun RegisterUI(
     onLoginClick: () -> Unit,
     onConsumeRegisterError: () -> Unit,
 ) {
-    var missingError: String? by remember { mutableStateOf(null) }
-
     Box(
         Modifier
             .fillMaxSize()
@@ -121,18 +124,10 @@ private fun RegisterUI(
             ) {
                 RegisterFields(
                     isRegistering = isRegistering,
-                    onRegister = { name, email, phone, password, confirmPassword ->
-                        when {
-                            name.isEmpty() -> missingError = "Name is required"
-                            email.isEmpty() -> missingError = "Email is required"
-                            phone.isEmpty() -> missingError = "Phone is required"
-                            password.isEmpty() -> missingError = "Password is required"
-                            password.length < 6 -> missingError =
-                                "Password must be at least 6 characters"
-
-                            password != confirmPassword -> missingError = "Passwords do not match"
-                            else -> onRegisterClick(name, email, phone, password)
-                        }
+                    // Field-level validation happens inside RegisterFields (inline errors).
+                    // By the time this fires, every field has already passed its own check.
+                    onRegister = { name, email, phone, password, _ ->
+                        onRegisterClick(name, email, phone, password)
                     },
                     onLogin = onLoginClick,
                 )
@@ -146,10 +141,8 @@ private fun RegisterUI(
         }
     }
 
-    missingError?.let {
-        AuthDialog(onDismiss = { missingError = null }, message = it)
-    }
-
+    // Reserved for real submission failures (email already registered, network error) —
+    // not for missing/invalid fields, which are shown inline where they occur.
     registerError?.let { error ->
         AuthDialog(onDismiss = onConsumeRegisterError, message = error)
     }
@@ -175,66 +168,116 @@ private fun RegisterFields(
     var isPasswordMasked: Boolean by remember { mutableStateOf(true) }
     var isConfirmPasswordMasked: Boolean by remember { mutableStateOf(true) }
 
-    Column {
-        Spacer(Modifier.height(8.dp))
+    var nameError: String? by remember { mutableStateOf(null) }
+    var emailError: String? by remember { mutableStateOf(null) }
+    var phoneError: String? by remember { mutableStateOf(null) }
+    var passwordError: String? by remember { mutableStateOf(null) }
+    var confirmPasswordError: String? by remember { mutableStateOf(null) }
 
+    Column {
         Spacer(Modifier.height(20.dp))
 
-        AuthTextField(value = name, onValueChange = { name = it }, label = "Name")
+        AuthTextField(
+            value = name,
+            onValueChange = { name = it; nameError = null },
+            label = "Name",
+            leadingIcon = {
+                Icon(Icons.Outlined.Person, contentDescription = null, tint = AppColors.TextMuted)
+            },
+            errorText = nameError,
+        )
+
         Spacer(Modifier.height(16.dp))
+
         AuthTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it; emailError = null },
             label = "Email",
-            keyboardType = KeyboardType.Email
+            keyboardType = KeyboardType.Email,
+            leadingIcon = {
+                Icon(Icons.Outlined.Email, contentDescription = null, tint = AppColors.TextMuted)
+            },
+            errorText = emailError,
         )
+
         Spacer(Modifier.height(16.dp))
+
         AuthTextField(
             value = phone,
-            onValueChange = { phone = it },
+            onValueChange = { phone = it; phoneError = null },
             label = "Phone",
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
+            leadingIcon = {
+                Icon(Icons.Outlined.Phone, contentDescription = null, tint = AppColors.TextMuted)
+            },
+            errorText = phoneError,
         )
 
         Spacer(Modifier.height(16.dp))
 
         AuthTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { password = it; passwordError = null },
             label = "Password",
             keyboardType = KeyboardType.Password,
+            leadingIcon = {
+                Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppColors.TextMuted)
+            },
             trailingIcon = {
                 PasswordToggle(
                     isPasswordMasked,
-                    onToggle = { isPasswordMasked = !isPasswordMasked })
+                    onToggle = { isPasswordMasked = !isPasswordMasked },
+                )
             },
             visualTransformation = if (isPasswordMasked) PasswordVisualTransformation() else VisualTransformation.None,
+            errorText = passwordError,
         )
+
         Spacer(Modifier.height(16.dp))
+
         AuthTextField(
             value = confirmPassword,
-            onValueChange = { confirmPassword = it },
+            onValueChange = { confirmPassword = it; confirmPasswordError = null },
             label = "Confirm password",
             keyboardType = KeyboardType.Password,
+            leadingIcon = {
+                Icon(Icons.Outlined.Lock, contentDescription = null, tint = AppColors.TextMuted)
+            },
             trailingIcon = {
                 PasswordToggle(
                     isConfirmPasswordMasked,
-                    onToggle = { isConfirmPasswordMasked = !isConfirmPasswordMasked })
+                    onToggle = { isConfirmPasswordMasked = !isConfirmPasswordMasked },
+                )
             },
             visualTransformation = if (isConfirmPasswordMasked) PasswordVisualTransformation() else VisualTransformation.None,
+            errorText = confirmPasswordError,
         )
 
         Spacer(Modifier.height(28.dp))
 
         Button(
             onClick = {
-                onRegister(
-                    name,
-                    email,
-                    phone,
-                    password,
-                    confirmPassword
-                )
+                nameError = if (name.isBlank()) "Enter your name" else null
+                emailError = if (email.isBlank()) "Enter your email" else null
+                phoneError = if (phone.isBlank()) "Enter your phone number" else null
+                passwordError = when {
+                    password.isBlank() -> "Enter a password"
+                    password.length < 6 -> "Use at least 6 characters"
+                    else -> null
+                }
+                confirmPasswordError = when {
+                    confirmPassword.isBlank() -> "Confirm your password"
+                    confirmPassword != password -> "Passwords don't match"
+                    else -> null
+                }
+
+                val hasError = listOf(
+                    nameError, emailError, phoneError, passwordError, confirmPasswordError
+                ).any { it != null }
+
+                if (!hasError) {
+                    onRegister(name, email, phone, password, confirmPassword)
+                }
             },
             enabled = !isRegistering,
             modifier = Modifier
@@ -262,5 +305,3 @@ private fun RegisterFields(
         }
     }
 }
-
-//add pass,encrypted,doesnt return to the user,and is used in login

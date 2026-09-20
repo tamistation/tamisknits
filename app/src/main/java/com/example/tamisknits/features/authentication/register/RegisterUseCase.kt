@@ -2,6 +2,7 @@ package com.example.tamisknits.features.authentication.register
 
 import com.example.tamisknits.models.User
 import com.example.tamisknits.models.UserType
+import com.example.tamisknits.models.UserTypeIds
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -19,7 +20,7 @@ class RegisterUseCase @Inject constructor(
     )
 
     companion object {
-        private const val CLIENT_USER_TYPE_ID = "AiFmhFP1CUBDE56GD7ta"
+        private const val CLIENT_USER_TYPE_ID = UserTypeIds.CLIENT
     }
 
     suspend fun execute(params: Params): User {
