@@ -52,6 +52,7 @@ fun UserDetailsPage(
     viewModel: UserDetailsViewModel,
     onBackClick: () -> Unit,
     onDeleteSuccess: () -> Unit,
+    onEditClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -69,6 +70,7 @@ fun UserDetailsPage(
         onRetry = {
             viewModel.loadUser(uid)
         },
+        onEditClick = onEditClick,
         onBlockClick = {
             viewModel.toggleBlock(uid)
         },
@@ -84,8 +86,9 @@ private fun UserDetailsUI(
     uiState: UserDetailsUiState,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
+    onEditClick: () -> Unit,
     onBlockClick: () -> Unit,
-    onDeleteClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -121,6 +124,7 @@ private fun UserDetailsUI(
                     onDeleteClick = {
                         showDeleteDialog = true
                     },
+                    onEditClick = onEditClick
                 )
             }
         }
@@ -152,6 +156,7 @@ private fun UserDetailsContent(
     isDeleting: Boolean,
     onBlockClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onEditClick: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -175,9 +180,8 @@ private fun UserDetailsContent(
                 text = "Edit User",
                 icon = Icons.Outlined.Edit,
                 enabled = !isUpdating && !isDeleting,
-                onClick = {
-                    // Edit screen will be connected in the next step.
-                },
+                onClick = onEditClick,
+
             )
         }
 

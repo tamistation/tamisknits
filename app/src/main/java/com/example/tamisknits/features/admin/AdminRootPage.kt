@@ -24,6 +24,8 @@ import com.example.tamisknits.features.admin.support.chat.TicketChatPage
 import com.example.tamisknits.features.admin.support.list.SupportPage
 import com.example.tamisknits.features.admin.userManagement.UserManagementPage
 import com.example.tamisknits.features.admin.userManagement.details.UserDetailsPage
+
+import com.example.tamisknits.features.admin.userManagement.edit.EditUserPage
 import com.example.tamisknits.navigation.AdminRoute
 import com.example.tamisknits.navigation.currentAdminRoute
 
@@ -177,7 +179,26 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                         onBackClick = {
                             innerNavController.popBackStack()
                         },
+                        onEditClick = {
+                            innerNavController.navigate(
+                                AdminRoute.EditUser(route.uid)
+                            )
+                        },
                         onDeleteSuccess = {
+                            innerNavController.popBackStack()
+                        }
+                    )
+                }
+                composable<AdminRoute.EditUser> { backStackEntry ->
+                    val route = backStackEntry.toRoute<AdminRoute.EditUser>()
+
+                    EditUserPage(
+                        uid = route.uid,
+                        viewModel = hiltViewModel(),
+                        onBackClick = {
+                            innerNavController.popBackStack()
+                        },
+                        onSaveSuccess = {
                             innerNavController.popBackStack()
                         }
                     )
