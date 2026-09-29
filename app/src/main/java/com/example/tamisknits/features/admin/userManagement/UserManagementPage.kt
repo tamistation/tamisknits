@@ -47,7 +47,9 @@ import com.example.tamisknits.ui.components.PageHeader
 fun UserManagementPage(
     viewModel: UserManagementViewModel,
     onUserClick: (String) -> Unit,
+    onAddDeliveryClick: () -> Unit,
     onBackClick: () -> Unit
+
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -72,6 +74,7 @@ fun UserManagementPage(
         onSearchQueryChange = viewModel::updateSearchQuery,
         onRetry = viewModel::loadUsers,
         onUserClick = onUserClick,
+        onAddDeliveryClick = onAddDeliveryClick,
         onBackClick = onBackClick
     )
 }
@@ -84,6 +87,7 @@ private fun UserManagementUI(
     onSearchQueryChange: (String) -> Unit,
     onRetry: () -> Unit,
     onUserClick: (String) -> Unit,
+    onAddDeliveryClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Column(
@@ -112,6 +116,20 @@ private fun UserManagementUI(
             onQueryChange = onSearchQueryChange,
             placeholder = "Search by name, email, or phone"
         )
+        if (uiState.selectedTab == UserManagementTab.DELIVERY) {
+            Spacer(modifier = Modifier.height(10.dp))
+
+            TextButton(
+                onClick = onAddDeliveryClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "+ Add Delivery Partner",
+                    color = AppColors.Terracotta,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

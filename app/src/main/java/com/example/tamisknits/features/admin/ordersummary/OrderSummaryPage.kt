@@ -178,7 +178,7 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
 
         item {
             Text(
-                "Items (${uiState.items.size})",
+                "Items (${uiState.items.sumOf { it.quantity }})",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 color = AppColors.TextDark

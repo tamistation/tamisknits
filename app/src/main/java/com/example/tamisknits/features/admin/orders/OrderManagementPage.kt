@@ -354,7 +354,10 @@ private fun OrderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 LabelValue("Client", order.clientId.take(10))
-                LabelValue("Items", "${order.items.size}")
+                LabelValue(
+                    "Items",
+                    "${order.items.sumOf { (it["quantity"] as? Number)?.toInt() ?: 0 }}"
+                )
                 LabelValue(
                     "Total",
                     "$${"%.2f".format(calculatedTotal)}"
