@@ -23,6 +23,7 @@ import com.example.tamisknits.features.admin.settings.SettingsPage
 import com.example.tamisknits.features.admin.support.chat.TicketChatPage
 import com.example.tamisknits.features.admin.support.list.SupportPage
 import com.example.tamisknits.features.admin.userManagement.UserManagementPage
+import com.example.tamisknits.features.admin.userManagement.addDelivery.AddDeliveryPage
 import com.example.tamisknits.features.admin.userManagement.details.UserDetailsPage
 
 import com.example.tamisknits.features.admin.userManagement.edit.EditUserPage
@@ -159,9 +160,14 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                 composable<AdminRoute.UserManagement> {
                     UserManagementPage(
                         viewModel = hiltViewModel(),
-                        onUserClick = { uid ->
+                        onUserClick = { id ->
                             innerNavController.navigate(
-                                AdminRoute.UserDetails(uid)
+                                AdminRoute.UserDetails(id)
+                            )
+                        },
+                        onAddDeliveryClick = {
+                            innerNavController.navigate(
+                                AdminRoute.AddDelivery
                             )
                         },
                         onBackClick = {
@@ -199,6 +205,18 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                             innerNavController.popBackStack()
                         },
                         onSaveSuccess = {
+                            innerNavController.popBackStack()
+                        }
+                    )
+                }
+
+                composable<AdminRoute.AddDelivery> {
+                    AddDeliveryPage(
+                        viewModel = hiltViewModel(),
+                        onBackClick = {
+                            innerNavController.popBackStack()
+                        },
+                        onCreateSuccess = {
                             innerNavController.popBackStack()
                         }
                     )

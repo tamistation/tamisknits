@@ -36,6 +36,9 @@ sealed interface AdminRoute {
 
     @Serializable
     data class EditUser(val uid: String) : AdminRoute
+
+    @Serializable
+    data object AddDelivery : AdminRoute
 }
 
 val NavBackStackEntry.currentAdminRoute: AdminRoute?
