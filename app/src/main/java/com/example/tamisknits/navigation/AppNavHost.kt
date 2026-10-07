@@ -1,6 +1,12 @@
 package com.example.tamisknits.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -8,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tamisknits.features.admin.AdminRootPage
 import com.example.tamisknits.features.authentication.login.LoginPage
+import com.example.tamisknits.features.authentication.onboarding.OnboardingScreen
+import com.example.tamisknits.features.authentication.onboarding.OnboardingViewModel
 import com.example.tamisknits.features.authentication.register.RegisterPage
 import com.example.tamisknits.features.authentication.splash.SplashScreen
 import com.example.tamisknits.features.client.ClientHomePage
@@ -22,10 +30,48 @@ fun AppNavHost(
         startDestination = AppRoute.Splash,
     ) {
         composable<AppRoute.Splash> {
+
+            val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+            val onboardingCompleted by onboardingViewModel.onboardingCompleted.collectAsState()
+
+            var splashFinished by remember {
+                mutableStateOf(false)
+            }
+
             SplashScreen(
                 onFinished = {
+                    splashFinished = true
+                }
+            )
+
+            LaunchedEffect(splashFinished, onboardingCompleted) {
+                if (splashFinished) {
+                    val destination = if (onboardingCompleted) {
+                        AppRoute.Login
+                    } else {
+                        AppRoute.Onboarding
+                    }
+
+                    navController.navigate(destination) {
+                        popUpTo(AppRoute.Splash) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
+
+        composable<AppRoute.Onboarding> {
+
+            val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+
+            OnboardingScreen(
+                viewModel = onboardingViewModel,
+                onFinished = {
                     navController.navigate(AppRoute.Login) {
-                        popUpTo(AppRoute.Splash) { inclusive = true }
+                        popUpTo(AppRoute.Onboarding) {
+                            inclusive = true
+                        }
                     }
                 }
             )

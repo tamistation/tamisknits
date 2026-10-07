@@ -53,6 +53,7 @@ dependencies {
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.1.0")
     }
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(platform(libs.firebase.bom))
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.firebase:firebase-analytics")

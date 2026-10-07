@@ -20,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.ui.AppProgress
 import com.example.tamisknits.ui.Loader
 import com.example.tamisknits.ui.components.CategoryDropdown
 import com.example.tamisknits.ui.components.ImagePicker
@@ -55,9 +57,7 @@ fun EditProductPage(
 
     if (uiState.isLoading) {
 
-        Loader(
-            modifier = Modifier.fillMaxSize()
-        )
+        AppProgress()
 
         return
     }
@@ -170,7 +170,14 @@ private fun EditProductUI(
 
                     Switch(
                         checked = uiState.isCustomizable,
-                        onCheckedChange = onCustomizableChange
+                        onCheckedChange = onCustomizableChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AppColors.Cream,
+                            checkedTrackColor = AppColors.Terracotta,
+                            uncheckedThumbColor = AppColors.Cream,
+                            uncheckedTrackColor = AppColors.Outline,
+                            uncheckedBorderColor = AppColors.Outline
+                        )
                     )
                 }
 
@@ -211,7 +218,8 @@ private fun EditProductUI(
 
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = AppColors.Terracotta
                         )
 
                         Spacer(modifier = Modifier.width(4.dp))
@@ -275,7 +283,7 @@ private fun EditProductUI(
                     if (uiState.isSaving) {
 
                         Loader(
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(8.dp),
                             color = AppColors.Surface
                         )
 
