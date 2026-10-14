@@ -1,5 +1,6 @@
 package com.example.tamisknits.features.admin.products.edit
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -157,15 +158,11 @@ private fun EditProductUI(
 
                         Text(
                             text = "Customizable",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.TextDark
                         )
 
-                        Text(
-                            text = "Allow customers to customize this product",
-                            fontSize = 12.sp,
-                            color = AppColors.TextMuted
-                        )
                     }
 
                     Switch(
@@ -181,21 +178,24 @@ private fun EditProductUI(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                Text(
-                    text = "Product Image",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppColors.TextDark
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Product Image",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppColors.TextDark
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                ImagePicker(
-                    imageUri = uiState.imageUri,
-                    onImageSelected = onImageSelected
-                )
+                    ImagePicker(
+                        imageUri = uiState.imageUri,
+                        onImageSelected = onImageSelected
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -203,32 +203,24 @@ private fun EditProductUI(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
                         text = "Variants",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.TextDark,
-                        modifier = Modifier.weight(1f)
+                        color = AppColors.TextDark
                     )
 
-                    TextButton(
-                        onClick = onAddVariant
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            tint = AppColors.Terracotta
-                        )
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        Text(
-                            text = "Add Variant",
-                            color = AppColors.Terracotta
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add variant",
+                        tint = AppColors.Terracotta,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(28.dp)
+                            .clickable {
+                                onAddVariant()
+                            }
+                    )
                 }
             }
         }

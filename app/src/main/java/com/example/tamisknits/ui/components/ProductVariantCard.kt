@@ -143,16 +143,28 @@ fun VariantCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ImagePicker(
-                imageUri = variant.imageUrl,
-                onImageSelected = { imageUri ->
-                    onVariantChange(
-                        variant.copy(
-                            imageUrl = imageUri ?: ""
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Add an Image",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AppColors.TextDark
+                )
+
+                ImagePicker(
+                    imageUri = variant.imageUrl,
+                    onImageSelected = { imageUri ->
+                        onVariantChange(
+                            variant.copy(
+                                imageUrl = imageUri ?: ""
+                            )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }
         }
     }
 }

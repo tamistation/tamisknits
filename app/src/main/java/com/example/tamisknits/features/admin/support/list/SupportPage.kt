@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -38,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -291,8 +289,7 @@ private fun TicketCard(
                         onClick = onOpenChat,
                         modifier = Modifier
                             .size(34.dp)
-                            .clip(CircleShape)
-                            .background(AppColors.DragBackground),
+
                     ) {
                         Icon(
                             Icons.Default.Chat,
@@ -303,13 +300,14 @@ private fun TicketCard(
                     }
 
                     if (ticket.status != "done") {
-                        Spacer(Modifier.width(8.dp))
+
+                        Spacer(Modifier.width(16.dp))
+
                         IconButton(
                             onClick = onCloseTicket,
                             modifier = Modifier
                                 .size(34.dp)
-                                .clip(CircleShape)
-                                .background(AppColors.CancelButtonBackground),
+
                         ) {
                             Icon(
                                 Icons.Default.CheckCircle,

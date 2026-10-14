@@ -12,13 +12,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.AppColors.CancelButtonBackground
 
 //this is a reusable popup dialogue
 //instead of writing one everytime
@@ -28,7 +28,7 @@ fun ConfirmationDialog(// those are the parameter for this function
     title: String,
     message: String,
     confirmLabel: String,
-    confirmColor: androidx.compose.ui.graphics.Color = AppColors.Terracotta,
+    confirmColor: androidx.compose.ui.graphics.Color = CancelButtonBackground,
     inputValue: String? = null,
     inputPlaceholder: String = "",
     onInputChange: ((String) -> Unit)? = null,
@@ -71,22 +71,33 @@ fun ConfirmationDialog(// those are the parameter for this function
 
         confirmButton = {
             Button(
-
                 onClick = onConfirm,
                 enabled = confirmEnabled,
-
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = confirmColor,
-                    disabledContainerColor = confirmColor.copy(alpha = 0.4f)
+                    containerColor = AppColors.CancelButtonBackground,
+                    disabledContainerColor = AppColors.CancelButtonBackground.copy(alpha = 0.4f)
                 ),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text(confirmLabel, color = AppColors.Surface)
+                Text(
+                    confirmLabel,
+                    color = AppColors.Terracotta
+                )
             }
         },
+
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Go back", color = AppColors.TextMuted)
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.Terracotta
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(
+                    "Go back",
+                    color = AppColors.Surface
+                )
             }
         }
     )
