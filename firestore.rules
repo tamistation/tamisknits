@@ -1,0 +1,135 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admin role = User doc whose usertypeId is the admin UserType (same id the Cloud Functions check).
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/User/$(request.auth.uid))
+        && get(/databases/$(database)/documents/User/$(request.auth.uid)).data.usertypeId == '1dJUrO951d1Ly8QzMnJQ';
+    }
+
+    function ownsExisting() {
+      return signedIn() && resource.data.clientId == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.clientId == request.auth.uid;
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    match /User/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      // Public sign-up can only ever create a client profile for itself.
+      allow create: if (isSelf(uid)
+          && request.resource.data.usertypeId == 'AiFmhFP1CUBDE56GD7ta'
+          && request.resource.data.status == 'active')
+        || isAdmin();
+      allow update: if (isSelf(uid) && onlyChanges(['name', 'phone'])) || isAdmin();
+      allow delete: if isSelf(uid) || isAdmin();
+
+      match /addresses/{addressId} {
+        allow read, write: if isSelf(uid);
+      }
+    }
+
+    match /UserType/{typeId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /Permissions/{permissionId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /config/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /Products/{productId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /Orders/{orderId} {
+      allow read: if ownsExisting() || isAdmin();
+      allow create: if (ownsIncoming() && request.resource.data.status == 'pending') || isAdmin();
+      // Clients may only cancel their own order while it is still pending.
+      allow update: if (ownsExisting()
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'cancelled'
+          && onlyChanges(['status', 'cancellationReason', 'updatedAt']))
+        || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /Cart/{cartId} {
+      allow read, delete: if ownsExisting() || isAdmin();
+      allow create: if ownsIncoming();
+      allow update: if ownsExisting() && request.resource.data.clientId == resource.data.clientId;
+    }
+
+    match /Favorites/{favoriteId} {
+      allow read, delete: if ownsExisting() || isAdmin();
+      allow create: if ownsIncoming();
+    }
+
+    match /SupportTickets/{ticketId} {
+      allow read: if ownsExisting() || isAdmin();
+      allow create: if ownsIncoming();
+      allow update, delete: if isAdmin();
+    }
+
+    // Reading is open to signed-in users because the chat query filters by ticketId;
+    // ticket ids are random, and only the ticket owner or an admin can post.
+    match /TicketMessages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && (get(/databases/$(database)/documents/SupportTickets/$(request.resource.data.ticketId)).data.clientId == request.auth.uid
+          || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /CustomizationRequests/{requestId} {
+      allow read: if ownsExisting() || isAdmin();
+      allow create: if ownsIncoming();
+      allow update, delete: if isAdmin();
+    }
+
+    match /Delivery/{deliveryId} {
+      allow read: if ownsExisting()
+        || (signedIn() && resource.data.deliveryPersonId == request.auth.uid)
+        || isAdmin();
+      allow update: if (signedIn()
+          && resource.data.deliveryPersonId == request.auth.uid
+          && onlyChanges(['status']))
+        || isAdmin();
+      allow create, delete: if isAdmin();
+    }
+
+    match /Reviews/{reviewId} {
+      allow read: if true;
+      allow create, update: if ownsIncoming()
+        && reviewId == request.resource.data.productId + '_' + request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow delete: if ownsExisting() || isAdmin();
+    }
+  }
+}
