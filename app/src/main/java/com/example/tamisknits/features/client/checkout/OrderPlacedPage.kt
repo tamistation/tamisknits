@@ -120,7 +120,7 @@ fun OrderPlacedPage(
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Thank you!",
-                    style = AppTextStyles.DisplayItalic,
+                    style = AppTextStyles.DisplayBrand,
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(10.dp))

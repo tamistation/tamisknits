@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.tamisknits.features.client.common.ClientFormat
 import com.example.tamisknits.features.client.ui.components.FavoriteButton
 import com.example.tamisknits.features.client.ui.components.ProductCard
@@ -51,6 +52,7 @@ import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.AppDimens
 import com.example.tamisknits.theme.AppShapes
 import com.example.tamisknits.theme.AppTextStyles
+import com.example.tamisknits.theme.AppType
 import com.example.tamisknits.ui.components.AppChip
 import com.example.tamisknits.ui.components.AppSnackbarHost
 import com.example.tamisknits.ui.components.ContentState
@@ -133,7 +135,12 @@ private fun HomeContent(
                     style = AppTextStyles.LabelSmall
                 )
                 Spacer(Modifier.height(4.dp))
-                Text("Find your next\nfavourite bag", style = AppTextStyles.DisplayItalic)
+                Text(
+                    "Find your next favourite",
+                    style = AppType.Brand.copy(fontSize = 28.sp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(Modifier.height(18.dp))
                 SearchBarButton(onClick = onSearchClick)
             }
@@ -300,7 +307,7 @@ private fun FeaturedCarousel(
                         .background(
                             Brush.verticalGradient(
                                 0.45f to Color.Transparent,
-                                1f to AppColors.DarkTerracotta.copy(alpha = 0.78f)
+                                1f to AppColors.BrandBurgundyDeep.copy(alpha = 0.78f)
                             )
                         )
                 )

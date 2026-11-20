@@ -204,7 +204,7 @@ private fun SupportUI(
         ) { data ->
             Snackbar(
                 containerColor = AppColors.Terracotta,
-                contentColor = Color.White
+                contentColor = AppColors.OnTerracotta
             ) {
                 Text(data.visuals.message)
             }
@@ -232,7 +232,7 @@ private fun TicketCard(
             .scale(scale)
             .shadow(cardElevation.dp, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(Modifier.padding(16.dp)) {

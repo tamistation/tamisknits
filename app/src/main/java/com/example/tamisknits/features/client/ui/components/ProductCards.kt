@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.tamisknits.features.client.common.ClientFormat
@@ -171,7 +170,7 @@ fun ProductBadge(product: ClientProduct, modifier: Modifier = Modifier) {
     }
     Text(
         text = label,
-        style = AppTextStyles.Caption.copy(color = Color.White),
+        style = AppTextStyles.Caption.copy(color = AppColors.Surface),
         modifier = modifier
             .clip(AppShapes.Pill)
             .background(color.copy(alpha = 0.88f))
@@ -202,7 +201,7 @@ fun ColorDots(colors: List<String>, modifier: Modifier = Modifier, maxDots: Int 
                 modifier = Modifier
                     .size(14.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(AppColors.Surface)
                     .padding(1.5.dp)
                     .clip(CircleShape)
                     .background(AppColors.swatch(name))

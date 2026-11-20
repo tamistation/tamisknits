@@ -4,10 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.tamisknits.features.admin.orders.OrderManagementPage
-import dagger.hilt.android.AndroidEntryPoint
 import com.example.tamisknits.navigation.AppNavHost
+import com.example.tamisknits.theme.TamisKnitsTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint //hilt
 class MainActivity : ComponentActivity() { //entry point of the app
@@ -17,7 +16,9 @@ class MainActivity : ComponentActivity() { //entry point of the app
 
         enableEdgeToEdge()//to fill all edges
         setContent {
-            AppNavHost()
+            TamisKnitsTheme {
+                AppNavHost()
+            }
         }
     }
 }

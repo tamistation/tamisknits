@@ -54,6 +54,7 @@ import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.AppDimens
 import com.example.tamisknits.theme.AppShapes
 import com.example.tamisknits.theme.AppTextStyles
+import com.example.tamisknits.theme.AppType
 import com.example.tamisknits.ui.components.AppSnackbarHost
 import com.example.tamisknits.ui.components.EmptyView
 import com.example.tamisknits.ui.components.ErrorView
@@ -202,7 +203,7 @@ private fun ChatBubble(bubble: ChatBubbleData, modifier: Modifier = Modifier) {
         if (!bubble.fromClient) {
             Text(
                 "Tami's Knits",
-                style = AppTextStyles.Caption.copy(color = AppColors.Terracotta),
+                style = AppType.BrandSmall.copy(color = AppColors.Terracotta),
                 modifier = Modifier.padding(start = 6.dp, bottom = 2.dp)
             )
         }

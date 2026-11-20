@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.components.PageHeader
 
 @Composable
@@ -109,7 +110,8 @@ private fun EditUserUI(
             Text(
                 text = "Personal Information",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                fontFamily = Fraunces,
+                fontWeight = FontWeight.SemiBold,
                 color = AppColors.TextDark
             )
 

@@ -12,7 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.tamisknits.features.admin.AdminRootPage
+import com.example.tamisknits.features.admin.navigation.AdminRootPage
 import com.example.tamisknits.features.authentication.login.LoginPage
 import com.example.tamisknits.features.authentication.onboarding.OnboardingScreen
 import com.example.tamisknits.features.authentication.onboarding.OnboardingViewModel

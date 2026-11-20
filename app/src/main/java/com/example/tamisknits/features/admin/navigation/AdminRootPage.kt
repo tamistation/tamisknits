@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin
+package com.example.tamisknits.features.admin.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

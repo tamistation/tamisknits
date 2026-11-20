@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.Loader
 import com.example.tamisknits.ui.components.CategoryDropdown
 import com.example.tamisknits.ui.components.ImagePicker
@@ -163,7 +164,8 @@ fun AddProductUI(
                 Text(
                     text = "Product Image",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = Fraunces,
+                    fontWeight = FontWeight.SemiBold,
                     color = AppColors.TextDark
                 )
 
@@ -183,7 +185,8 @@ fun AddProductUI(
                     Text(
                         text = "Variants",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontFamily = Fraunces,
+                        fontWeight = FontWeight.SemiBold,
                         color = AppColors.TextDark,
                         modifier = Modifier.weight(1f)
                     )

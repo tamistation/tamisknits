@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.example.tamisknits.dialogs.ConfirmationDialog
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.Loader
 import com.example.tamisknits.ui.components.AppSearchBar
 import com.example.tamisknits.ui.components.PageHeader
@@ -264,6 +265,7 @@ private fun EmptyProductsState() {
             Text(
                 text = "No products found",
                 fontSize = 16.sp,
+                fontFamily = Fraunces,
                 fontWeight = FontWeight.SemiBold,
                 color = AppColors.TextDark
             )
@@ -339,7 +341,8 @@ private fun ProductCard(
                 Text(
                     text = product.name,
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = Fraunces,
+                    fontWeight = FontWeight.SemiBold,
                     color = AppColors.TextDark
                 )
 

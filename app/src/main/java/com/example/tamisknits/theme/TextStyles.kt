@@ -1,87 +1,99 @@
 package com.example.tamisknits.theme
 
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.tamisknits.theme.AppType
-import com.example.tamisknits.theme.Fraunces
-import com.example.tamisknits.theme.Nunito
 
 object AppTextStyles {
-    val Display = TextStyle(
+    val Display
+        get() = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 34.sp,
         color = AppColors.TextDark
     )
-    val DisplayItalic = Display.copy(fontStyle = FontStyle.Italic)
-    val Wordmark = AppType.WordmarkItalic.copy(color = AppColors.Terracotta)
-    val Title = TextStyle(
+    val DisplayBrand
+        get() = AppType.Brand.copy(
+            fontSize = 32.sp,
+            lineHeight = 38.sp,
+            color = AppColors.TextDark
+        )
+    val Wordmark get() = AppType.Brand.copy(color = AppColors.Terracotta)
+    val Title
+        get() = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.Medium,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         color = AppColors.TextDark
     )
-    val Subtitle = TextStyle(
+    val Subtitle
+        get() = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.Medium,
         fontSize = 17.sp,
         lineHeight = 22.sp,
         color = AppColors.TextDark
     )
-    val Body = TextStyle(
+    val Body
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
         lineHeight = 22.sp,
         color = AppColors.TextSecondary
     )
-    val BodySmall = TextStyle(
+    val BodySmall
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
         lineHeight = 18.sp,
         color = AppColors.TextSecondary
     )
-    val Label = TextStyle(
+    val Label
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         color = AppColors.TextDark
     )
-    val LabelSmall = TextStyle(
+    val LabelSmall
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         color = AppColors.TextSecondary
     )
-    val Caption = TextStyle(
+    val Caption
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         color = AppColors.TextMuted
     )
-    val Overline = TextStyle(
+    val Overline
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.Bold,
         fontSize = 11.sp,
         letterSpacing = 1.4.sp,
         color = AppColors.TextMuted
     )
-    val Price = TextStyle(
+    val Price
+        get() = TextStyle(
         fontFamily = Nunito,
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
         color = AppColors.Terracotta
     )
-    val PriceLarge = TextStyle(
+    val PriceLarge
+        get() = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
         fontSize = 26.sp,
         color = AppColors.Terracotta
     )
-    val Button = AppType.Button
+    val Button get() = AppType.Button
 }
