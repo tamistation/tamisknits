@@ -31,13 +31,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.dialogs.ConfirmationDialog
+import com.example.tamisknits.features.client.ui.components.ClientImage
+import com.example.tamisknits.features.client.ui.image.ClientImageResolver
 import com.example.tamisknits.models.Products
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.Fraunces
@@ -326,10 +330,7 @@ private fun ProductCard(
         ) {
 
             ProductImage(
-                imageUrl = product.variants
-                    .firstOrNull()
-                    ?.imageUrl
-                    ?: ""
+                imageUrl = product.imageUrl.ifBlank { product.variants.firstOrNull()?.imageUrl.orEmpty() }
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -408,6 +409,8 @@ private fun ProductCard(
 private fun ProductImage(
     imageUrl: String
 ) {
+    val context = LocalContext.current
+    val model = remember(imageUrl) { ClientImageResolver.resolve(context, imageUrl) }
     Box(
         modifier = Modifier
             .size(90.dp)
@@ -416,11 +419,11 @@ private fun ProductImage(
         contentAlignment = Alignment.Center
     ) {
 
-        Icon(
-            imageVector = Icons.Default.Inventory2,
+        ClientImage(
+            model = model,
             contentDescription = null,
-            tint = AppColors.TextMuted,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.matchParentSize(),
+            placeholderIconSize = 32.dp
         )
     }
 }

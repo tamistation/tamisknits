@@ -58,7 +58,7 @@ class OrderSummaryUseCase @Inject constructor(
                     variantId = variantId,
                     quantity = quantity,
                     name = product?.name ?: "Unknown product",
-                    imageUrl = variant?.imageUrl ?: "",
+                    imageUrl = variant?.imageUrl?.ifBlank { null } ?: product?.imageUrl.orEmpty(),
                     size = variant?.size ?: "",
                     color = variant?.color ?: "",
                     price = variant?.price ?: 0.0

@@ -4,6 +4,7 @@ import com.example.tamisknits.models.Cart
 import com.example.tamisknits.models.CustomizationRequest
 import com.example.tamisknits.models.Delivery
 import com.example.tamisknits.models.Favorites
+import com.example.tamisknits.models.HomeCarousel
 import com.example.tamisknits.models.OrderStatusConfig
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Permissions
@@ -337,6 +338,38 @@ class FirebaseRepository(
         firestore.collection("Products").add(data)
             .addOnSuccessListener { doc -> onSuccess(doc.id) }
             .addOnFailureListener { onFailure(it.message ?: "Failed to add product") }
+    }
+
+    fun getHomeCarouselIds(): Flow<List<String>> = callbackFlow {
+        val listener = firestore.collection(HomeCarousel.COLLECTION)
+            .document(HomeCarousel.DOCUMENT)
+            .addSnapshotListener { document, error ->
+                if (error != null) {
+                    trySend(emptyList()); return@addSnapshotListener
+                }
+                val ids = (document?.get(HomeCarousel.FIELD_PRODUCT_IDS) as? List<*>)
+                    ?.filterIsInstance<String>()
+                    .orEmpty()
+                trySend(ids)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    fun setHomeCarouselIds(
+        productIds: List<String>,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection(HomeCarousel.COLLECTION)
+            .document(HomeCarousel.DOCUMENT)
+            .set(
+                mapOf(
+                    HomeCarousel.FIELD_PRODUCT_IDS to productIds,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            )
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it.message ?: "Couldn't save the carousel") }
     }
 
     fun getProducts(): Flow<List<Products>> = callbackFlow {

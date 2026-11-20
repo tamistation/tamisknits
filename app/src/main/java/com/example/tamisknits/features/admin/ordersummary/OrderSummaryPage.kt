@@ -34,10 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.tamisknits.features.client.ui.image.ClientImageResolver
 import com.example.tamisknits.models.OrderItem
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.Fraunces
@@ -269,7 +271,7 @@ private fun OrderItemRow(item: OrderItem) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AsyncImage(
-                model = item.imageUrl,
+                model = ClientImageResolver.resolve(LocalContext.current, item.imageUrl),
                 contentDescription = item.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
