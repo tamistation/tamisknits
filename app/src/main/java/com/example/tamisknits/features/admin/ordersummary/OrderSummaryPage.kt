@@ -34,12 +34,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.tamisknits.features.client.ui.image.ClientImageResolver
 import com.example.tamisknits.models.OrderItem
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.components.PageHeader
 import com.example.tamisknits.ui.components.StatusPill
 
@@ -125,7 +128,7 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
@@ -136,8 +139,9 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
                     ) {
                         Text(
                             text = "Order #${uiState.order!!.orderId.take(8).uppercase()}",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
+                            fontFamily = Fraunces,
                             color = AppColors.TextDark
                         )
                         val (label, color) = summaryStatusPillStyle(uiState.order!!.status)
@@ -157,7 +161,7 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
@@ -215,7 +219,7 @@ private fun OrderBreakdownCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -256,7 +260,7 @@ private fun OrderItemRow(item: OrderItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -267,7 +271,7 @@ private fun OrderItemRow(item: OrderItem) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AsyncImage(
-                model = item.imageUrl,
+                model = ClientImageResolver.resolve(LocalContext.current, item.imageUrl),
                 contentDescription = item.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

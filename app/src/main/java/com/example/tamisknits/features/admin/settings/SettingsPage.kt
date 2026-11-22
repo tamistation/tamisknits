@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ private data class SettingsItem(
 @Composable
 fun SettingsPage(
     onUserManagementClick: () -> Unit,
+    onHomeCarouselClick: () -> Unit,
     onLoggedOut: () -> Unit
 ) {
     var showLogoutConfirm by remember { mutableStateOf(false) }
@@ -57,6 +59,12 @@ fun SettingsPage(
             title = "User Management",
             subtitle = "Manage clients and delivery users",
             onClick = onUserManagementClick
+        ),
+        SettingsItem(
+            icon = Icons.Outlined.ViewCarousel,
+            title = "Home carousel",
+            subtitle = "Choose and order the featured products clients swipe",
+            onClick = onHomeCarouselClick
         )
     )
 

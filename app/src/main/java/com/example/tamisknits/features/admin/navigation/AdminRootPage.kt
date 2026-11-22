@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.admin
+package com.example.tamisknits.features.admin.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.tamisknits.features.admin.homecarousel.HomeCarouselPage
 import com.example.tamisknits.features.admin.orders.OrderManagementPage
 import com.example.tamisknits.features.admin.ordersummary.OrderSummaryPage
 import com.example.tamisknits.features.admin.products.add.AddProductPage
@@ -154,7 +155,16 @@ fun AdminRootPage(onLoggedOut: () -> Unit) {
                                 AdminRoute.UserManagement
                             )
                         },
+                        onHomeCarouselClick = {
+                            innerNavController.navigate(AdminRoute.HomeCarousel)
+                        },
                         onLoggedOut = onLoggedOut
+                    )
+                }
+                composable<AdminRoute.HomeCarousel> {
+                    HomeCarouselPage(
+                        viewModel = hiltViewModel(),
+                        onBackClick = { innerNavController.popBackStack() }
                     )
                 }
                 composable<AdminRoute.UserManagement> {

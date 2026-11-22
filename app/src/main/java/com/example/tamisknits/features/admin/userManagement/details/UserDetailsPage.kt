@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.models.User
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.CormorantGaramond
 import com.example.tamisknits.ui.components.PageHeader
 
 @Composable
@@ -249,8 +250,9 @@ private fun UserInfoCard(
             modifier = Modifier.fillMaxWidth(),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             color = AppColors.TextDark,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp,
+            fontFamily = CormorantGaramond,
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(modifier = Modifier.height(4.dp))

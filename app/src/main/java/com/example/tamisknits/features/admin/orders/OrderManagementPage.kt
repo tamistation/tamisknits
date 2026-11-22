@@ -245,7 +245,7 @@ private fun OrderManagementUI(// hol declarations to fill in data fo2 with types
         ) { data ->
             Snackbar(
                 containerColor = AppColors.Terracotta,
-                contentColor = Color.White
+                contentColor = AppColors.OnTerracotta
             ) {
                 Text(data.visuals.message)
             }
@@ -272,8 +272,8 @@ private fun FilterChipRow(selected: OrderFilter, onSelect: (OrderFilter) -> Unit
                 label = { Text(filter.label(), fontSize = 13.sp) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = AppColors.Terracotta,
-                    selectedLabelColor = Color.White,
-                    containerColor = Color.White,
+                    selectedLabelColor = AppColors.OnTerracotta,
+                    containerColor = AppColors.Surface,
                     labelColor = AppColors.TextDark
                 ),
                 border = FilterChipDefaults.filterChipBorder(
@@ -318,7 +318,7 @@ private fun OrderCard(
             .shadow(cardElevation.dp, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

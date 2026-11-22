@@ -40,10 +40,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.tamisknits.dialogs.ConfirmationDialog
+import com.example.tamisknits.features.authentication.components.BrandWordmark
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.AppDimens
 import com.example.tamisknits.theme.AppTextStyles
+import com.example.tamisknits.theme.AppType
 import com.example.tamisknits.ui.components.AppCard
 import com.example.tamisknits.ui.components.AppChip
 import com.example.tamisknits.ui.components.PasswordDialog
@@ -103,7 +106,7 @@ fun ProfilePage(
                     Spacer(Modifier.height(14.dp))
                     Text(
                         uiState.displayName,
-                        style = AppTextStyles.Title,
+                        style = AppType.Brand.copy(fontSize = 30.sp, color = AppColors.TextDark),
                         textAlign = TextAlign.Center
                     )
                     Text(
@@ -194,7 +197,7 @@ fun ProfilePage(
                     )
                 )
                 Spacer(Modifier.height(24.dp))
-                Text("Tami's Knits · handmade with love", style = AppTextStyles.Caption)
+                BrandWordmark(color = AppColors.Terracotta, size = 32.sp)
             }
         }
     }

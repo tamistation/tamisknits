@@ -5,10 +5,12 @@ import android.content.Context
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.models.Products
+import com.example.tamisknits.ui.image.DataUriImages
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Turns an image string into something Coil can load:
+ *  - "data:image/...;base64,..." (photos the admin picked, see DataUriImages) becomes raw bytes
  *  - "https://..." stays a URL
  *  - a drawable name ("rosie_tote", "rosie_tote.jpg", "res/drawable/rosie_tote.png") becomes its resource id
  *  - otherwise the bundled naming convention is tried: product_<name>, product_<name>_<color>, product_<name>_2..6
@@ -22,6 +24,7 @@ object ClientImageResolver {
 
     fun resolve(context: Context, value: String, fallbackNames: List<String> = emptyList()): Any? {
         val trimmed = value.trim()
+        if (DataUriImages.isDataUri(trimmed)) return DataUriImages.toBytes(trimmed)
         if (isWebUrl(trimmed)) return trimmed
         drawableId(context, trimmed)?.let { return it }
         fallbackNames.firstNotNullOfOrNull { drawableId(context, it) }?.let { return it }

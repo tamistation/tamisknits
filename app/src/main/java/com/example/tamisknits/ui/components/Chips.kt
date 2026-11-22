@@ -158,7 +158,7 @@ fun ColorSwatch(
                 Icon(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = if (color.luminance() > 0.6f) AppColors.Terracotta else Color.White,
+                    tint = if (color.luminance() > 0.6f) AppColors.BrandBurgundy else Color.White,
                     modifier = Modifier.size(size * 0.4f)
                 )
             }

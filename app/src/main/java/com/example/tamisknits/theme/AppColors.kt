@@ -2,7 +2,6 @@ package com.example.tamisknits.theme
 
 import androidx.compose.ui.graphics.Color
 
-
 object AppColors {
     val Cream = Color(0xFFFDFBF9)
     val Terracotta = Color(0xFF4D0E13)
@@ -27,14 +26,11 @@ object AppColors {
 
     val SageThread = Color(0xFF6E8266)
 
-
     val SuccessGreen = Color(0xFF4CAF50)
     val SuccessGreenSoft = Color(0xFFE8F5E9)
 
-
     val ErrorRed = Color(0xFFF44336)
     val ErrorRedSoft = Color(0xFFFFEBEE)
-
 
     val InfoBlue = Color(0xFF2196F3)
 
@@ -52,6 +48,13 @@ object AppColors {
     val Scrim = Color(0x66000000)
     val Shadow = Color(0x334D0E13)
 
+    // Brand burgundy stays the same in both themes: splash, sign-in header and hero banners,
+    // which always carry white text.
+    val BrandBurgundy = Color(0xFF4D0E13)
+    val BrandBurgundyLight = Color(0xFF7A2E35)
+    val BrandBurgundyDeep = Color(0xFF26070A)
+    val OnBrand = Color.White
+
     fun orderStatusColor(status: String): Color = when (status) {
         "pending" -> Pending
         "confirmed", "shipped", "in_transit" -> Active

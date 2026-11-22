@@ -2,6 +2,7 @@ package com.example.tamisknits.features.client.data.repository
 
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
+import com.example.tamisknits.models.HomeCarousel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.MetadataChanges
 import kotlinx.coroutines.channels.awaitClose
@@ -24,6 +25,24 @@ class ClientProductRepository(
                 }
                 val list = snapshot?.documents?.map { it.toClientProduct() } ?: emptyList()
                 trySend(ClientResult.Success(list, snapshot?.metadata?.isFromCache == true))
+            }
+        awaitClose { listener.remove() }
+    }
+
+    // Ordered ids the admin picked for the home carousel. Any error (missing doc, rules) just
+    // emits an empty list so the home screen falls back to its automatic picks.
+    fun getHomeCarouselIds(): Flow<List<String>> = callbackFlow {
+        val listener = firestore.collection(HomeCarousel.COLLECTION)
+            .document(HomeCarousel.DOCUMENT)
+            .addSnapshotListener { document, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val ids = (document?.get(HomeCarousel.FIELD_PRODUCT_IDS) as? List<*>)
+                    ?.filterIsInstance<String>()
+                    .orEmpty()
+                trySend(ids)
             }
         awaitClose { listener.remove() }
     }

@@ -13,10 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.AppTextStyles
 @Composable
 fun PageHeader(
     title: String,
@@ -45,15 +45,12 @@ fun PageHeader(
         Column {
             Text(
                 text = title,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.TextDark,
+                style = AppTextStyles.Title.copy(fontSize = 26.sp, lineHeight = 32.sp),
             )
 
             Text(
                 text = subtitle,
-                fontSize = 13.sp,
-                color = AppColors.TextMuted,
+                style = AppTextStyles.Caption.copy(fontSize = 13.sp),
             )
         }
     }

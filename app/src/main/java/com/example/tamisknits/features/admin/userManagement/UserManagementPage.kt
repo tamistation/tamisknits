@@ -40,6 +40,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.tamisknits.models.User
 import com.example.tamisknits.theme.AppColors
+import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.components.AppSearchBar
 import com.example.tamisknits.ui.components.PageHeader
 
@@ -392,7 +393,8 @@ private fun EmptyUsersState(
                     }
                 },
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                fontFamily = Fraunces
             )
 
             Spacer(modifier = Modifier.height(6.dp))

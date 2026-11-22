@@ -3,7 +3,6 @@ package com.example.tamisknits.theme
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.R
@@ -11,7 +10,6 @@ import com.example.tamisknits.R
 val Fraunces = FontFamily(
     Font(R.font.fraunces_medium, FontWeight.Medium),
     Font(R.font.fraunces_semibold, FontWeight.SemiBold),
-    Font(R.font.fraunces_semibold_italic, FontWeight.SemiBold, FontStyle.Italic),
 )
 
 val Nunito = FontFamily(
@@ -20,13 +18,21 @@ val Nunito = FontFamily(
     Font(R.font.nunito_bold, FontWeight.Bold),
 )
 
+val CormorantGaramond = FontFamily(
+    Font(R.font.cormorant_garamond_medium, FontWeight.Medium),
+    Font(R.font.cormorant_garamond_semibold, FontWeight.SemiBold),
+    Font(R.font.cormorant_garamond_bold, FontWeight.Bold),
+)
+
 object AppType {
-    val WordmarkItalic = TextStyle(
-        fontFamily = Fraunces,
+    val Brand = TextStyle(
+        fontFamily = CormorantGaramond,
         fontWeight = FontWeight.SemiBold,
-        fontStyle = FontStyle.Italic,
-        fontSize = 30.sp,
+        fontSize = 38.sp,
+        letterSpacing = 0.5.sp,
     )
+    val BrandSmall = Brand.copy(fontSize = 15.sp, letterSpacing = 0.2.sp)
+
     val Headline = TextStyle(
         fontFamily = Fraunces,
         fontWeight = FontWeight.Medium,

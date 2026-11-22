@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tamisknits.models.AvatarOptions
 import com.example.tamisknits.theme.AppColors
-import com.example.tamisknits.theme.AppTextStyles
+import com.example.tamisknits.theme.AppType
 
 private data class AvatarStyle(val icon: ImageVector?, val background: Color, val tint: Color)
 
@@ -53,7 +53,7 @@ private fun avatarStyle(avatarId: String): AvatarStyle = when (avatarId) {
         AppColors.MarigoldGold
     )
 
-    else -> AvatarStyle(null, AppColors.Terracotta, Color.White)
+    else -> AvatarStyle(null, AppColors.Terracotta, AppColors.OnTerracotta)
 }
 
 @Composable
@@ -81,9 +81,9 @@ fun UserAvatar(
         } else {
             Text(
                 text = initials,
-                style = AppTextStyles.Title.copy(
+                style = AppType.Brand.copy(
                     color = style.tint,
-                    fontSize = (size.value * 0.36f).sp
+                    fontSize = (size.value * 0.42f).sp
                 )
             )
         }

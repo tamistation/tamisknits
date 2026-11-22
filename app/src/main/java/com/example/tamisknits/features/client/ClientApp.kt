@@ -23,7 +23,6 @@ import com.example.tamisknits.features.client.navigation.ClientNavGraph
 import com.example.tamisknits.features.client.navigation.currentClientTab
 import com.example.tamisknits.features.client.navigation.navigateToTab
 import com.example.tamisknits.theme.AppColors
-import com.example.tamisknits.ui.components.StatusBarIcons
 
 @Composable
 fun ClientApp(
@@ -34,8 +33,6 @@ fun ClientApp(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentTab = backStackEntry?.currentClientTab
     val cartCount by viewModel.cartCount.collectAsState()
-
-    StatusBarIcons(dark = true)
 
     Scaffold(
         containerColor = AppColors.Surface,

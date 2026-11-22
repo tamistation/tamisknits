@@ -39,6 +39,9 @@ sealed interface AdminRoute {
 
     @Serializable
     data object AddDelivery : AdminRoute
+
+    @Serializable
+    data object HomeCarousel : AdminRoute
 }
 
 val NavBackStackEntry.currentAdminRoute: AdminRoute?
@@ -54,5 +57,6 @@ val NavBackStackEntry.currentAdminRoute: AdminRoute?
         destination.hasRoute<AdminRoute.OrderSummary>() -> toRoute<AdminRoute.OrderSummary>()
         destination.hasRoute<AdminRoute.UserManagement>() -> toRoute<AdminRoute.UserManagement>()
         destination.hasRoute<AdminRoute.UserDetails>() -> toRoute<AdminRoute.UserDetails>()
+        destination.hasRoute<AdminRoute.HomeCarousel>() -> toRoute<AdminRoute.HomeCarousel>()
         else -> null
     }

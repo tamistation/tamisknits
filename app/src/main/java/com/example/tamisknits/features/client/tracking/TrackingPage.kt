@@ -205,15 +205,15 @@ private fun TrackingHero(uiState: TrackingUiState) {
             .background(
                 if (uiState.isCancelled) Brush.linearGradient(
                     listOf(
-                        AppColors.TextSecondary,
-                        AppColors.TextDark
+                        Color(0xFF6B5560),
+                        Color(0xFF1A0A10)
                     )
                 )
                 else Brush.linearGradient(
                     listOf(
-                        AppColors.TerracottaMuted,
-                        AppColors.Terracotta,
-                        AppColors.DarkTerracotta
+                        AppColors.BrandBurgundyLight,
+                        AppColors.BrandBurgundy,
+                        AppColors.BrandBurgundyDeep
                     )
                 )
             )

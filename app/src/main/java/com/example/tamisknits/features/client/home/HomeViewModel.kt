@@ -7,7 +7,6 @@ import com.example.tamisknits.features.client.common.ClientUserUseCase
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.dataOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -32,13 +32,22 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // A Firestore listener stops for good after an error, so retrying means subscribing again.
+    // Products and the admin's carousel picks travel together so the carousel never flashes
+    // the automatic fallback before the picks arrive.
+    private val productsWithCarousel = retryTrigger.flatMapLatest {
+        combine(
+            useCase.getProducts(),
+            useCase.getHomeCarouselIds()
+        ) { products, ids -> products to ids }
+    }
+
     val uiState: StateFlow<HomeUiState> = combine(
-        retryTrigger.flatMapLatest { useCase.getProducts() },
+        productsWithCarousel,
         favorites,
         useCase.getRecentlyViewedIds(uid),
         userUseCase.getProfile(),
         message
-    ) { products, favs, recentIds, profile, currentMessage ->
+    ) { (products, carouselIds), favs, recentIds, profile, currentMessage ->
         val base = HomeUiState(
             userName = profile.dataOrNull?.name?.trim()?.substringBefore(' ').orEmpty(),
             favoriteIds = favs.map { it.productId }.toSet(),
@@ -48,7 +57,7 @@ class HomeViewModel @Inject constructor(
             ClientResult.Loading -> base
             is ClientResult.Error -> base.copy(isLoading = false, errorMessage = products.message)
             is ClientResult.Success -> {
-                val sections = useCase.buildSections(products.data, recentIds)
+                val sections = useCase.buildSections(products.data, recentIds, carouselIds)
                 base.copy(
                     isLoading = false,
                     isOffline = products.isFromCache,

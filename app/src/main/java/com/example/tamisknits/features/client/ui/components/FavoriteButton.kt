@@ -43,7 +43,7 @@ fun FavoriteButton(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     buttonSize: Dp = 38.dp,
-    background: Color = Color.White.copy(alpha = 0.94f)
+    background: Color = AppColors.Surface.copy(alpha = 0.94f)
 ) {
     val haptics = LocalHapticFeedback.current
     val iconScale = remember { Animatable(1f) }
