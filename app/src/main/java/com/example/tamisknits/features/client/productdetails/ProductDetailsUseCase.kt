@@ -1,13 +1,13 @@
 package com.example.tamisknits.features.client.productdetails
 
 import com.example.tamisknits.features.client.data.preferences.ClientPreferences
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
-import com.example.tamisknits.features.client.data.repository.ClientReviewRepository
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.ProductReview
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientProductRepository
+import com.example.tamisknits.repository.ClientReviewRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class ProductDetailsUseCase @Inject constructor(
     private val productRepository: ClientProductRepository,

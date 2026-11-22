@@ -1,10 +1,10 @@
 package com.example.tamisknits.features.client.home
 
 import com.example.tamisknits.features.client.data.preferences.ClientPreferences
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.HomeSections
+import com.example.tamisknits.repository.ClientProductRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

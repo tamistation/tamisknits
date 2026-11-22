@@ -1,21 +1,21 @@
 package com.example.tamisknits.features.client.profile
 
 import com.example.tamisknits.features.client.data.preferences.ClientPreferences
-import com.example.tamisknits.features.client.data.repository.ClientAccountRepository
-import com.example.tamisknits.features.client.data.repository.ClientAddressRepository
-import com.example.tamisknits.features.client.data.repository.ClientOrderRepository
 import com.example.tamisknits.models.ClientOrder
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.SavedAddress
-import com.example.tamisknits.repository.FirebaseRepository
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientAccountRepository
+import com.example.tamisknits.repository.ClientAddressRepository
+import com.example.tamisknits.repository.ClientOrderRepository
+import com.example.tamisknits.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class ProfileUseCase @Inject constructor(
     private val accountRepository: ClientAccountRepository,
     private val addressRepository: ClientAddressRepository,
     private val orderRepository: ClientOrderRepository,
-    private val repository: FirebaseRepository,
+    private val repository: UserRepository,
     private val preferences: ClientPreferences
 ) {
     fun getOrders(clientId: String): Flow<ClientResult<List<ClientOrder>>> =

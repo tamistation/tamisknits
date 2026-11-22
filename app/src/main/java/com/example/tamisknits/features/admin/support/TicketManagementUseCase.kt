@@ -3,14 +3,16 @@ package com.example.tamisknits.features.admin.support
 
 import com.example.tamisknits.models.SupportTickets
 import com.example.tamisknits.models.TicketMessage
-import com.example.tamisknits.repository.FirebaseRepository
+import com.example.tamisknits.repository.SupportRepository
+import com.example.tamisknits.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
 class TicketManagementUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: SupportRepository,
+    private val userRepository: UserRepository
 ) {
     fun getSupportTickets(): Flow<List<SupportTickets>> = repository.getSupportTickets()
 
@@ -34,7 +36,7 @@ class TicketManagementUseCase @Inject constructor(
     suspend fun getUserName(uid: String): String {
         if (uid.isBlank()) return "Unknown"
         return suspendCancellableCoroutine { cont ->
-            repository.getUser(
+            userRepository.getUser(
                 uid,
                 onSuccess = { user -> if (cont.isActive) cont.resume(user.name) },
                 onFailure = { if (cont.isActive) cont.resume("Unknown") }

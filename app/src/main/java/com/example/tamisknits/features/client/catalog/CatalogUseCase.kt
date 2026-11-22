@@ -1,12 +1,12 @@
 package com.example.tamisknits.features.client.catalog
 
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
+import com.example.tamisknits.repository.ClientProductRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import kotlin.math.ceil
 import kotlin.math.floor
-import kotlinx.coroutines.flow.Flow
 
 class CatalogUseCase @Inject constructor(
     private val productRepository: ClientProductRepository

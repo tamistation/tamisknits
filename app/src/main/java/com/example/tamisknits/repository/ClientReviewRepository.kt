@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.data.repository
+package com.example.tamisknits.repository
 
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.ProductReview

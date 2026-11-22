@@ -1,12 +1,12 @@
 package com.example.tamisknits.features.admin.products.productmanagement
 
 import com.example.tamisknits.models.Products
-import com.example.tamisknits.repository.FirebaseRepository
+import com.example.tamisknits.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ProductManagementUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: ProductRepository
 ) {
     fun getProducts(): Flow<List<Products>> =
         repository.getProducts()

@@ -1,13 +1,13 @@
 package com.example.tamisknits.features.client.checkout
 
-import com.example.tamisknits.features.client.data.repository.ClientAddressRepository
-import com.example.tamisknits.features.client.data.repository.ClientOrderRepository
 import com.example.tamisknits.features.pricing.PricingUseCase
 import com.example.tamisknits.models.CartLine
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.SavedAddress
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientAddressRepository
+import com.example.tamisknits.repository.ClientOrderRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class CheckoutUseCase @Inject constructor(
     private val addressRepository: ClientAddressRepository,

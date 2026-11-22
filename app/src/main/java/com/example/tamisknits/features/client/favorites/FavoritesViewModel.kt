@@ -5,12 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.tamisknits.features.client.common.ClientCartUseCase
 import com.example.tamisknits.features.client.common.ClientFavoritesUseCase
 import com.example.tamisknits.features.client.common.ClientUserUseCase
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.Favorites
+import com.example.tamisknits.repository.ClientProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 private data class FavoritesControls(
     val movingToCartIds: Set<String> = emptySet(),

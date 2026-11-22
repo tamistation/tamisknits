@@ -1,13 +1,13 @@
 package com.example.tamisknits.features.client.data.di
 
-import com.example.tamisknits.features.client.data.repository.ClientAccountRepository
-import com.example.tamisknits.features.client.data.repository.ClientAddressRepository
-import com.example.tamisknits.features.client.data.repository.ClientCartRepository
-import com.example.tamisknits.features.client.data.repository.ClientCustomizationRepository
-import com.example.tamisknits.features.client.data.repository.ClientOrderRepository
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
-import com.example.tamisknits.features.client.data.repository.ClientReviewRepository
-import com.example.tamisknits.features.client.data.repository.ClientSupportRepository
+import com.example.tamisknits.repository.ClientAccountRepository
+import com.example.tamisknits.repository.ClientAddressRepository
+import com.example.tamisknits.repository.ClientCartRepository
+import com.example.tamisknits.repository.ClientCustomizationRepository
+import com.example.tamisknits.repository.ClientOrderRepository
+import com.example.tamisknits.repository.ClientProductRepository
+import com.example.tamisknits.repository.ClientReviewRepository
+import com.example.tamisknits.repository.ClientSupportRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module

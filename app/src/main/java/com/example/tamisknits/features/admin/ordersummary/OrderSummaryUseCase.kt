@@ -5,7 +5,8 @@ import com.example.tamisknits.models.OrderItem
 import com.example.tamisknits.models.OrderPricingDto
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Products
-import com.example.tamisknits.repository.FirebaseRepository
+import com.example.tamisknits.repository.OrderRepository
+import com.example.tamisknits.repository.ProductRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -13,7 +14,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 
 class OrderSummaryUseCase @Inject constructor(
-    private val repository: FirebaseRepository,
+    private val repository: OrderRepository,
+    private val productRepository: ProductRepository,
     private val pricingUseCase: PricingUseCase
 ) {
 
@@ -28,7 +30,7 @@ class OrderSummaryUseCase @Inject constructor(
     private suspend fun getProductSuspend(
         productId: String
     ) = suspendCancellableCoroutine<Products?> { cont ->
-        repository.getProduct(
+        productRepository.getProduct(
             productId = productId,
             onSuccess = { product ->
                 cont.resume(product) {}

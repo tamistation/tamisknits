@@ -1,11 +1,11 @@
 package com.example.tamisknits.features.admin.userManagement.details
 
 import com.example.tamisknits.models.User
-import com.example.tamisknits.repository.FirebaseRepository
+import com.example.tamisknits.repository.UserRepository
 import javax.inject.Inject
 
 class UserDetailsUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: UserRepository
 ) {
 
     fun getUser(
