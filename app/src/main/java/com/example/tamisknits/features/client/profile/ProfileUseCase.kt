@@ -42,13 +42,6 @@ class ProfileUseCase @Inject constructor(
 
     fun signOut() = accountRepository.signOut()
 
-    fun changePassword(
-        currentPassword: String,
-        newPassword: String,
-        onSuccess: () -> Unit,
-        onFailure: (String) -> Unit
-    ) = accountRepository.changePassword(currentPassword, newPassword, onSuccess, onFailure)
-
     fun deleteAccount(
         currentPassword: String,
         onSuccess: () -> Unit,

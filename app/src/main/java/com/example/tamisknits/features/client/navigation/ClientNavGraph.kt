@@ -33,7 +33,7 @@ import com.example.tamisknits.features.client.productdetails.ProductDetailsPage
 import com.example.tamisknits.features.client.profile.addresses.AddressesPage
 import com.example.tamisknits.features.client.profile.edit.EditProfilePage
 import com.example.tamisknits.features.client.profile.main.ProfilePage
-import com.example.tamisknits.features.client.profile.password.ChangePasswordPage
+import com.example.tamisknits.features.account.password.ChangePasswordPage
 import com.example.tamisknits.features.client.support.chat.SupportChatPage
 import com.example.tamisknits.features.client.support.create.CreateTicketPage
 import com.example.tamisknits.features.client.support.list.SupportTicketsPage

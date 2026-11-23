@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.profile.password
+package com.example.tamisknits.features.account.password
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn

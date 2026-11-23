@@ -12,5 +12,7 @@ data class Orders(
     val totalPrice: Double = 0.0,
     val status: String = "pending",
     val shippingAddress: Map<String, String> = emptyMap(),
-    val isCustomOrder: Boolean = false
+    val isCustomOrder: Boolean = false,
+    // Set by the assigned driver when a delivery runs into trouble; an admin clears it.
+    val deliveryIssue: String = ""
 )

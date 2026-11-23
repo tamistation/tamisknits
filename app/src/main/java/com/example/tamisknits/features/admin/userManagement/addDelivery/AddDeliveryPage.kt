@@ -8,21 +8,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tamisknits.dialogs.ConfirmationDialog
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.Fraunces
 import com.example.tamisknits.ui.components.PageHeader
+import com.example.tamisknits.ui.components.PrimaryButton
 
 @Composable
 fun AddDeliveryPage(
@@ -31,6 +36,8 @@ fun AddDeliveryPage(
     onCreateSuccess: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val clipboardManager = LocalClipboardManager.current
+    var passwordCopied by remember { mutableStateOf(false) }
 
     AddDeliveryUI(
         uiState = uiState,
@@ -38,12 +45,26 @@ fun AddDeliveryPage(
         onNameChange = viewModel::updateName,
         onEmailChange = viewModel::updateEmail,
         onPhoneChange = viewModel::updatePhone,
-        onCreateClick = {
-            viewModel.createDelivery(
-                onSuccess = onCreateSuccess
-            )
-        }
+        onCreateClick = viewModel::createDelivery
     )
+
+    // Shown once: the password isn't stored anywhere, so closing this is the last chance to see it.
+    val temporaryPassword = uiState.temporaryPassword
+    if (temporaryPassword != null) {
+        ConfirmationDialog(
+            title = "Driver account created",
+            message = "Share these sign-in details with the driver. " +
+                    "This password won't be shown again.\n\n" +
+                    "Email: ${uiState.createdEmail}\n" +
+                    "Temporary password: $temporaryPassword",
+            confirmLabel = if (passwordCopied) "Copied" else "Copy password",
+            onConfirm = {
+                clipboardManager.setText(AnnotatedString(temporaryPassword))
+                passwordCopied = true
+            },
+            onDismiss = onCreateSuccess
+        )
+    }
 }
 
 @Composable
@@ -142,16 +163,12 @@ private fun AddDeliveryUI(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
+            PrimaryButton(
+                text = "Create Delivery Account",
                 onClick = onCreateClick,
-                enabled = !uiState.isCreating,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Terracotta
-                )
-            ) {
-                Text("Create Delivery Account")
-            }
+                loading = uiState.isCreating,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
