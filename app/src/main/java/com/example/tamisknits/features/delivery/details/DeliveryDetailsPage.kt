@@ -95,7 +95,9 @@ fun DeliveryDetailsPage(
             )
         },
         bottomBar = {
-            if (uiState.order != null) DeliveryActionBar(uiState, viewModel::onPrimaryAction)
+            val showActions = uiState.order != null && !uiState.notFound &&
+                    !uiState.isLoading && uiState.errorMessage == null
+            if (showActions) DeliveryActionBar(uiState, viewModel::onPrimaryAction)
         }
     ) { padding ->
         Box(Modifier.padding(padding)) {
@@ -108,8 +110,8 @@ fun DeliveryDetailsPage(
 
                 uiState.notFound || uiState.order == null -> EmptyView(
                     icon = Icons.AutoMirrored.Rounded.ReceiptLong,
-                    title = "Delivery not found",
-                    message = "This order isn't available any more.",
+                    title = "This delivery was reassigned",
+                    message = "It's no longer assigned to you.",
                     actionLabel = "Go back",
                     onAction = onBack
                 )

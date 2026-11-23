@@ -60,11 +60,31 @@ class DeliveryDetailsViewModel @Inject constructor(
         orderListener = useCase.listenToOrder(
             orderId = orderId,
             onUpdate = ::applyOrder,
+            onUnassigned = ::onUnassigned,
             onFailure = { message ->
-                // Also lands here if the admin reassigns the order to someone else (read denied).
                 _uiState.update { it.copy(isLoading = false, errorMessage = message) }
             }
         )
+    }
+
+    // The admin gave the order to another driver, so this driver can't read it any more.
+    private fun onUnassigned() {
+        awaitingStatus = null
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = null,
+                order = null,
+                notFound = true,
+                steps = emptyList(),
+                actionLabel = null,
+                isAdvancing = false,
+                showConfirmSheet = false,
+                cashConfirmed = false,
+                showReportSheet = false,
+                isReporting = false
+            )
+        }
     }
 
     private fun applyOrder(order: DeliveryOrder?) {
