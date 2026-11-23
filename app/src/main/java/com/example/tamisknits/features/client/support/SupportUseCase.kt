@@ -1,18 +1,18 @@
 package com.example.tamisknits.features.client.support
 
-import com.example.tamisknits.features.client.data.repository.ClientSupportRepository
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.ClientTicket
 import com.example.tamisknits.models.SupportTickets
 import com.example.tamisknits.models.TicketMessage
 import com.example.tamisknits.models.TicketStatuses
-import com.example.tamisknits.repository.FirebaseRepository
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientSupportRepository
+import com.example.tamisknits.repository.SupportRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class SupportUseCase @Inject constructor(
     private val supportRepository: ClientSupportRepository,
-    private val repository: FirebaseRepository
+    private val repository: SupportRepository
 ) {
     fun getTickets(clientId: String): Flow<ClientResult<List<ClientTicket>>> =
         supportRepository.getTickets(clientId)

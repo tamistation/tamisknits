@@ -19,7 +19,7 @@ import com.example.tamisknits.features.authentication.onboarding.OnboardingViewM
 import com.example.tamisknits.features.authentication.register.RegisterPage
 import com.example.tamisknits.features.authentication.splash.SplashScreen
 import com.example.tamisknits.features.client.ClientApp
-import com.example.tamisknits.features.delivery.DeliveryHomePage
+import com.example.tamisknits.features.delivery.DeliveryApp
 
 @Composable
 fun AppNavHost(
@@ -142,7 +142,13 @@ fun AppNavHost(
         }
 
         composable<AppRoute.DeliveryHome> {
-            DeliveryHomePage()
+            DeliveryApp(
+                onLoggedOut = {
+                    navController.navigate(AppRoute.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

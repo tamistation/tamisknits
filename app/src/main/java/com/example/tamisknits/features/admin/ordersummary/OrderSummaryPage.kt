@@ -3,6 +3,7 @@ package com.example.tamisknits.features.admin.ordersummary
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,24 +12,37 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.rounded.WarningAmber
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +55,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.tamisknits.features.client.ui.image.ClientImageResolver
 import com.example.tamisknits.models.OrderItem
+import com.example.tamisknits.models.OrderStatuses
+import com.example.tamisknits.models.User
 import com.example.tamisknits.theme.AppColors
 import com.example.tamisknits.theme.Fraunces
+import com.example.tamisknits.ui.components.AppSnackbarHost
+import com.example.tamisknits.ui.components.MessageEffect
 import com.example.tamisknits.ui.components.PageHeader
+import com.example.tamisknits.ui.components.SecondaryButton
 import com.example.tamisknits.ui.components.StatusPill
 
 @Composable
@@ -57,17 +76,34 @@ fun OrderSummaryPage(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    MessageEffect(
+        message = uiState.message,
+        hostState = snackbarHostState,
+        onShown = viewModel::messageShown
+    )
 
     OrderSummaryUI(
         uiState = uiState,
-        onBackClick = onBackClick
+        snackbarHostState = snackbarHostState,
+        onBackClick = onBackClick,
+        onAssignDriverClick = viewModel::openDriverPicker,
+        onDriverSelected = viewModel::assignDriver,
+        onDismissDriverPicker = viewModel::dismissDriverPicker,
+        onResolveIssue = viewModel::clearDeliveryIssue
     )
 }
 
 @Composable
 private fun OrderSummaryUI(
     uiState: OrderSummaryState,
-    onBackClick: () -> Unit
+    snackbarHostState: SnackbarHostState,
+    onBackClick: () -> Unit,
+    onAssignDriverClick: () -> Unit,
+    onDriverSelected: (String) -> Unit,
+    onDismissDriverPicker: () -> Unit,
+    onResolveIssue: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -108,14 +144,38 @@ private fun OrderSummaryUI(
                     }
                 }
                 uiState.order != null -> {
-                    OrderSummaryContent(uiState = uiState)
+                    OrderSummaryContent(
+                        uiState = uiState,
+                        onAssignDriverClick = onAssignDriverClick,
+                        onResolveIssue = onResolveIssue
+                    )
                 }
             }
         }
+
+        AppSnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+
+    if (uiState.showDriverPicker) {
+        DriverPickerDialog(
+            drivers = uiState.assignableDrivers,
+            currentDriverId = uiState.assignedDriverId,
+            isLoading = uiState.isLoadingDrivers,
+            isAssigning = uiState.isAssigningDriver,
+            onConfirm = onDriverSelected,
+            onDismiss = onDismissDriverPicker
+        )
     }
 }
 @Composable
-private fun OrderSummaryContent(uiState: OrderSummaryState) {
+private fun OrderSummaryContent(
+    uiState: OrderSummaryState,
+    onAssignDriverClick: () -> Unit,
+    onResolveIssue: () -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -123,6 +183,17 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { Spacer(Modifier.height(8.dp)) }
+
+        val issue = uiState.order?.deliveryIssue.orEmpty()
+        if (issue.isNotBlank()) {
+            item {
+                DeliveryIssueCard(
+                    issue = issue,
+                    isResolving = uiState.isClearingIssue,
+                    onResolve = onResolveIssue
+                )
+            }
+        }
 
         item {
             Card(
@@ -181,6 +252,13 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
         }
 
         item {
+            DeliveryCard(
+                uiState = uiState,
+                onAssignDriverClick = onAssignDriverClick
+            )
+        }
+
+        item {
             Text(
                 "Items (${uiState.items.sumOf { it.quantity }})",
                 fontWeight = FontWeight.Bold,
@@ -206,6 +284,189 @@ private fun OrderSummaryContent(uiState: OrderSummaryState) {
 
         item { Spacer(Modifier.height(16.dp)) }
     }
+}
+
+@Composable
+private fun DeliveryIssueCard(
+    issue: String,
+    isResolving: Boolean,
+    onResolve: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.PendingSoft),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Rounded.WarningAmber,
+                    contentDescription = null,
+                    tint = AppColors.Pending
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Driver reported a problem",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = AppColors.TextDark
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(issue, fontSize = 14.sp, color = AppColors.TextDark)
+            Spacer(Modifier.height(12.dp))
+            SecondaryButton(
+                text = if (isResolving) "Resolving…" else "Issue resolved",
+                onClick = onResolve,
+                enabled = !isResolving,
+                contentColor = AppColors.Pending,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeliveryCard(
+    uiState: OrderSummaryState,
+    onAssignDriverClick: () -> Unit
+) {
+    val order = uiState.order ?: return
+    val assignedDriver = uiState.assignedDriver
+    val hasDriver = uiState.assignedDriverId.isNotBlank()
+    val canAssign =
+        order.status != OrderStatuses.DELIVERED && order.status != OrderStatuses.CANCELLED
+    val driverLabel = when {
+        !hasDriver -> "Not assigned"
+        assignedDriver != null -> assignedDriver.name.ifBlank { "Unnamed driver" }
+        uiState.isLoadingDrivers -> "Loading…"
+        else -> "Unknown driver"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                "Delivery",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = AppColors.TextDark
+            )
+            Spacer(Modifier.height(8.dp))
+            SummaryRow("Driver", driverLabel)
+            if (hasDriver) {
+                assignedDriver?.phone?.takeIf { it.isNotBlank() }?.let { phone ->
+                    Spacer(Modifier.height(8.dp))
+                    SummaryRow("Driver phone", phone)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            SecondaryButton(
+                text = if (hasDriver) "Change driver" else "Assign driver",
+                onClick = onAssignDriverClick,
+                enabled = canAssign && !uiState.isAssigningDriver,
+                icon = Icons.Outlined.LocalShipping,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (!canAssign) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Drivers can't be assigned to ${
+                        OrderStatuses.label(order.status).lowercase()
+                    } orders.",
+                    fontSize = 12.sp,
+                    color = AppColors.TextMuted
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DriverPickerDialog(
+    drivers: List<User>,
+    currentDriverId: String,
+    isLoading: Boolean,
+    isAssigning: Boolean,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedId by rememberSaveable { mutableStateOf(currentDriverId) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Assign driver", fontWeight = FontWeight.Bold) },
+        text = {
+            when {
+                isLoading && drivers.isEmpty() -> Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AppColors.Terracotta)
+                }
+
+                drivers.isEmpty() -> Text(
+                    "No active delivery users. Add one from User Management first.",
+                    color = AppColors.TextMuted
+                )
+
+                else -> LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                    items(drivers, key = { it.uid }) { driver ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable(enabled = !isAssigning) { selectedId = driver.uid }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = driver.uid == selectedId,
+                                onClick = { selectedId = driver.uid },
+                                enabled = !isAssigning,
+                                colors = RadioButtonDefaults.colors(selectedColor = AppColors.Terracotta)
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    driver.name.ifBlank { "Unnamed driver" },
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = AppColors.TextDark
+                                )
+                                val detail = driver.phone.ifBlank { driver.email }
+                                if (detail.isNotBlank()) {
+                                    Text(detail, fontSize = 12.sp, color = AppColors.TextMuted)
+                                }
+                            }
+                            if (driver.uid == currentDriverId) {
+                                Text("Current", fontSize = 12.sp, color = AppColors.TextMuted)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(selectedId) },
+                enabled = selectedId.isNotBlank() && selectedId != currentDriverId && !isAssigning
+            ) {
+                Text(if (isAssigning) "Assigning…" else "Assign", color = AppColors.Terracotta)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isAssigning) {
+                Text("Cancel", color = AppColors.TextMuted)
+            }
+        }
+    )
 }
 
 @Composable

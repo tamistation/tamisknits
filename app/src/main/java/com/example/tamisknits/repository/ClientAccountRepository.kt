@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.data.repository
+package com.example.tamisknits.repository
 
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.User
@@ -27,7 +27,7 @@ class ClientAccountRepository(
 
     fun signOut() = auth.signOut()
 
-    // FirebaseRepository.getCurrentUser() opens a nested listener per collection that is never removed,
+    // UserRepository.getCurrentUser() opens a nested listener per collection that is never removed,
     // so the client screens read the profile through this single, properly closed listener.
     fun getProfile(uid: String): Flow<ClientResult<User?>> = callbackFlow {
         trySend(ClientResult.Loading)

@@ -1,10 +1,10 @@
 package com.example.tamisknits.features.client.common
 
-import com.example.tamisknits.features.client.data.repository.ClientAccountRepository
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.User
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientAccountRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class ClientUserUseCase @Inject constructor(
     private val accountRepository: ClientAccountRepository

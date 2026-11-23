@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.data.repository
+package com.example.tamisknits.repository
 
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.ClientTicket
@@ -8,7 +8,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-// Creating tickets and sending/reading chat messages go through the existing FirebaseRepository;
+// Creating tickets and sending/reading chat messages go through the shared SupportRepository;
 // this only adds the client-scoped live reads that report errors and creation time.
 class ClientSupportRepository(
     private val firestore: FirebaseFirestore

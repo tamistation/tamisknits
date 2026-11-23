@@ -1,16 +1,15 @@
-package com.example.tamisknits.features.client.profile.password
+package com.example.tamisknits.features.account.password
 
 import androidx.lifecycle.ViewModel
-import com.example.tamisknits.features.client.profile.ProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 @HiltViewModel
 class ChangePasswordViewModel @Inject constructor(
-    private val useCase: ProfileUseCase
+    private val useCase: ChangePasswordUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChangePasswordUiState())

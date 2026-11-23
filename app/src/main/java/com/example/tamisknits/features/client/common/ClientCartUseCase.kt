@@ -1,7 +1,5 @@
 package com.example.tamisknits.features.client.common
 
-import com.example.tamisknits.features.client.data.repository.ClientCartRepository
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
 import com.example.tamisknits.features.pricing.PricingUseCase
 import com.example.tamisknits.models.CartLine
 import com.example.tamisknits.models.ClientProduct
@@ -9,17 +7,19 @@ import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.OrderPricingDto
 import com.example.tamisknits.models.ProductVariant
 import com.example.tamisknits.models.dataOrNull
-import com.example.tamisknits.repository.FirebaseRepository
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientCartRepository
+import com.example.tamisknits.repository.ClientProductRepository
+import com.example.tamisknits.repository.OrderRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
+import javax.inject.Inject
 
 class ClientCartUseCase @Inject constructor(
     private val cartRepository: ClientCartRepository,
     private val productRepository: ClientProductRepository,
-    private val repository: FirebaseRepository,
+    private val repository: OrderRepository,
     private val pricingUseCase: PricingUseCase
 ) {
     fun getCartLines(clientId: String): Flow<ClientResult<List<CartLine>>> = combine(

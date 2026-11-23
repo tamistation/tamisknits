@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.data.repository
+package com.example.tamisknits.repository
 
 import com.example.tamisknits.models.ClientCustomizationRequest
 import com.example.tamisknits.models.ClientResult
@@ -32,7 +32,7 @@ class ClientCustomizationRepository(
             awaitClose { listener.remove() }
         }
 
-    // Same document shape as FirebaseRepository.addCustomizationRequest, plus referenceImageUrl.
+    // Same document shape as SupportRepository.addCustomizationRequest, plus referenceImageUrl.
     fun submitRequest(
         request: CustomizationRequest,
         referenceImageUrl: String,

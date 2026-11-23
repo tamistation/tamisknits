@@ -2,11 +2,11 @@ package com.example.tamisknits.features.admin.userManagement
 
 import com.example.tamisknits.models.User
 import com.example.tamisknits.models.UserTypeIds
-import com.example.tamisknits.repository.FirebaseRepository
+import com.example.tamisknits.repository.UserRepository
 import javax.inject.Inject
 
 class UserManagementUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: UserRepository
 ) {
 
     companion object {

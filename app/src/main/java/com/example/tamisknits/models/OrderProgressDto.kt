@@ -3,6 +3,9 @@ package com.example.tamisknits.models
 
 object OrderStatuses {
     const val PENDING = "pending"
+    const val CONFIRMED = "confirmed"
+    const val SHIPPED = "shipped"
+    const val IN_TRANSIT = "in_transit"
     const val CANCELLED = "cancelled"
     const val DELIVERED = "delivered"
 

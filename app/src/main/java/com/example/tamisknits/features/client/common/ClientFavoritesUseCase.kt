@@ -1,13 +1,13 @@
 package com.example.tamisknits.features.client.common
 
 import com.example.tamisknits.models.Favorites
-import com.example.tamisknits.repository.FirebaseRepository
-import javax.inject.Inject
+import com.example.tamisknits.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import javax.inject.Inject
 
 class ClientFavoritesUseCase @Inject constructor(
-    private val repository: FirebaseRepository
+    private val repository: ProductRepository
 ) {
     fun getFavorites(clientId: String): Flow<List<Favorites>> =
         if (clientId.isBlank()) flowOf(emptyList()) else repository.getFavorites(clientId)

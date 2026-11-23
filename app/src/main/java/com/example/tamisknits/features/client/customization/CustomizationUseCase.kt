@@ -1,15 +1,15 @@
 package com.example.tamisknits.features.client.customization
 
 import android.util.Patterns
-import com.example.tamisknits.features.client.data.repository.ClientCustomizationRepository
-import com.example.tamisknits.features.client.data.repository.ClientProductRepository
 import com.example.tamisknits.models.ClientCustomizationRequest
 import com.example.tamisknits.models.ClientProduct
 import com.example.tamisknits.models.ClientResult
 import com.example.tamisknits.models.CustomizationRequest
-import javax.inject.Inject
+import com.example.tamisknits.repository.ClientCustomizationRepository
+import com.example.tamisknits.repository.ClientProductRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
 
 class CustomizationUseCase @Inject constructor(
     private val customizationRepository: ClientCustomizationRepository,

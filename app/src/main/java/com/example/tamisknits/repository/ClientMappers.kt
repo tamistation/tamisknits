@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.data.repository
+package com.example.tamisknits.repository
 
 import com.example.tamisknits.models.Cart
 import com.example.tamisknits.models.CartLine
