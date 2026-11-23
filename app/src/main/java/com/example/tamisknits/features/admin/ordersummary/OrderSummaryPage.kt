@@ -335,7 +335,8 @@ private fun DeliveryCard(
     val order = uiState.order ?: return
     val assignedDriver = uiState.assignedDriver
     val hasDriver = uiState.assignedDriverId.isNotBlank()
-    val canAssign = order.status != OrderStatuses.DELIVERED && order.status != OrderStatuses.CANCELLED
+    val canAssign =
+        order.status != OrderStatuses.DELIVERED && order.status != OrderStatuses.CANCELLED
     val driverLabel = when {
         !hasDriver -> "Not assigned"
         assignedDriver != null -> assignedDriver.name.ifBlank { "Unnamed driver" }
@@ -375,7 +376,9 @@ private fun DeliveryCard(
             if (!canAssign) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Drivers can't be assigned to ${OrderStatuses.label(order.status).lowercase()} orders.",
+                    "Drivers can't be assigned to ${
+                        OrderStatuses.label(order.status).lowercase()
+                    } orders.",
                     fontSize = 12.sp,
                     color = AppColors.TextMuted
                 )

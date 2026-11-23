@@ -60,7 +60,10 @@ class OrderSummaryViewModel @Inject constructor(
         useCase.getDrivers(
             onSuccess = { drivers ->
                 _uiState.update {
-                    it.copy(drivers = drivers.sortedBy { d -> d.name.lowercase() }, isLoadingDrivers = false)
+                    it.copy(
+                        drivers = drivers.sortedBy { d -> d.name.lowercase() },
+                        isLoadingDrivers = false
+                    )
                 }
             },
             onFailure = { message ->
