@@ -15,8 +15,10 @@ class DeliveryDetailsUseCase @Inject constructor(
     fun listenToOrder(
         orderId: String,
         onUpdate: (DeliveryOrder?) -> Unit,
+        onUnassigned: () -> Unit,
         onFailure: (String) -> Unit
-    ): ListenerRegistration = deliveryOrderRepository.listenToOrder(orderId, onUpdate, onFailure)
+    ): ListenerRegistration =
+        deliveryOrderRepository.listenToOrder(orderId, onUpdate, onUnassigned, onFailure)
 
     // Same config/orderStatuses doc the client tracker uses, so both show the same steps.
     fun getOrderStatusConfig(): Flow<OrderStatusConfig> = orderRepository.getOrderStatusConfig()

@@ -7,6 +7,7 @@ import com.example.tamisknits.repository.toClientOrder
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
 
 // Orders assigned to a driver live in the Orders collection with deliveryId == driver uid.
@@ -38,16 +39,19 @@ class DeliveryOrderRepository(
             }
 
     // Live single order for the details screen. Allowed for the assigned driver by the Orders read rule.
-    // Emits null if the order is gone or no longer assigned to this driver (the read is then denied).
+    // Emits null if the order document is gone. If the admin reassigns the order, the rules deny
+    // the read (PERMISSION_DENIED) and onUnassigned fires instead; Firestore then stops the listener.
     fun listenToOrder(
         orderId: String,
         onUpdate: (DeliveryOrder?) -> Unit,
+        onUnassigned: () -> Unit,
         onFailure: (String) -> Unit
     ): ListenerRegistration =
         firestore.collection("Orders").document(orderId)
             .addSnapshotListener { doc, error ->
                 if (error != null) {
-                    onFailure(error.message ?: "Couldn't load this delivery")
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) onUnassigned()
+                    else onFailure(error.message ?: "Couldn't load this delivery")
                     return@addSnapshotListener
                 }
                 onUpdate(doc?.takeIf { it.exists() }?.toDeliveryOrder())
