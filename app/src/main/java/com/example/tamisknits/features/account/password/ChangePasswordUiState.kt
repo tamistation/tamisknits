@@ -1,4 +1,4 @@
-package com.example.tamisknits.features.client.profile.password
+package com.example.tamisknits.features.account.password
 
 enum class PasswordField { CURRENT, NEW, CONFIRM }
 

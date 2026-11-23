@@ -79,6 +79,20 @@ class OrderRepository(
             .addOnFailureListener { onFailure(it.message ?: "Failed to delete delivery") }
     }
 
+    // Assigns a driver by storing their User uid in Orders.deliveryId (no Delivery doc).
+    // The driver's app listens on Orders where deliveryId == their uid.
+    fun assignDriverToOrder(
+        orderId: String,
+        driverId: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection("Orders").document(orderId)
+            .update(mapOf("deliveryId" to driverId, "updatedAt" to FieldValue.serverTimestamp()))
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it.message ?: "Failed to assign driver") }
+    }
+
 
     // add order
     fun addOrder(order: Orders, onSuccess: (String) -> Unit, onFailure: (String) -> Unit) {

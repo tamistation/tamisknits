@@ -65,14 +65,39 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // The assigned driver's uid is stored in Orders.deliveryId ('' until an admin assigns one).
+    function isAssignedDriver() {
+      return signedIn() && resource.data.deliveryId == request.auth.uid;
+    }
+
+    // Drivers can keep the status as is, or move it exactly one step along the delivery flow.
+    function isDriverStatusStep(from, to) {
+      return from == to
+        || (from == 'confirmed' && to == 'shipped')
+        || (from == 'shipped' && to == 'in_transit')
+        || (from == 'in_transit' && to == 'delivered');
+    }
+
+    function validDriverFields() {
+      let data = request.resource.data;
+      return (!('cashCollected' in data) || data.cashCollected is bool)
+        && (!('deliveryIssue' in data) || data.deliveryIssue is string);
+    }
+
     match /Orders/{orderId} {
-      allow read: if ownsExisting() || isAdmin();
+      allow read: if ownsExisting() || isAssignedDriver() || isAdmin();
       allow create: if (ownsIncoming() && request.resource.data.status == 'pending') || isAdmin();
       // Clients may only cancel their own order while it is still pending.
       allow update: if (ownsExisting()
           && resource.data.status == 'pending'
           && request.resource.data.status == 'cancelled'
           && onlyChanges(['status', 'cancellationReason', 'updatedAt']))
+        // The assigned driver may only advance delivery progress and record delivery details;
+        // deliveryId is not in the list, so a driver can't reassign or unassign themselves.
+        || (isAssignedDriver()
+          && onlyChanges(['status', 'updatedAt', 'deliveredAt', 'cashCollected', 'deliveryIssue'])
+          && isDriverStatusStep(resource.data.status, request.resource.data.status)
+          && validDriverFields())
         || isAdmin();
       allow delete: if isAdmin();
     }

@@ -5,8 +5,12 @@ import com.example.tamisknits.models.OrderItem
 import com.example.tamisknits.models.OrderPricingDto
 import com.example.tamisknits.models.Orders
 import com.example.tamisknits.models.Products
+import com.example.tamisknits.models.User
+import com.example.tamisknits.models.UserTypeIds
 import com.example.tamisknits.repository.OrderRepository
 import com.example.tamisknits.repository.ProductRepository
+import com.example.tamisknits.repository.UserRepository
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -16,6 +20,7 @@ import javax.inject.Inject
 class OrderSummaryUseCase @Inject constructor(
     private val repository: OrderRepository,
     private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
     private val pricingUseCase: PricingUseCase
 ) {
 
@@ -25,6 +30,46 @@ class OrderSummaryUseCase @Inject constructor(
         onFailure: (String) -> Unit
     ) {
         repository.getOrderById(orderId, onSuccess, onFailure)
+    }
+
+    // All delivery users (the picker only offers the active ones; see OrderSummaryState).
+    fun getDrivers(
+        onSuccess: (List<User>) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        userRepository.getUsersByType(
+            usertypeId = UserTypeIds.DELIVERY,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+    }
+
+    fun assignDriver(
+        orderId: String,
+        driverId: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        repository.assignDriverToOrder(
+            orderId = orderId,
+            driverId = driverId,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+    }
+
+    // Admins can write any Orders field; this just removes the driver's flag.
+    fun clearDeliveryIssue(
+        orderId: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        repository.updateOrder(
+            orderId = orderId,
+            updates = mapOf("deliveryIssue" to "", "updatedAt" to FieldValue.serverTimestamp()),
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
     }
 
     private suspend fun getProductSuspend(
